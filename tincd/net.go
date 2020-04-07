@@ -33,7 +33,9 @@ func (impl *netImpl) Start() {
 	done := make(chan struct{})
 	impl.stop = cancel
 	impl.done = done
-	impl.peers = peersManager{}
+	impl.peers = peersManager{
+		network: impl.definition,
+	}
 	go func() {
 		defer cancel()
 		defer close(done)

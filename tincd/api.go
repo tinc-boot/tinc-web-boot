@@ -14,7 +14,7 @@ import (
 
 const (
 	retryInterval     = 1 * time.Second
-	communicationPort = 1655
+	CommunicationPort = 1655
 )
 
 func runAPI(ctx context.Context, requests chan<- peerReq, network *network.Network) {
@@ -34,7 +34,7 @@ func runAPI(ctx context.Context, requests chan<- peerReq, network *network.Netwo
 	var listener net.Listener
 	for {
 
-		l, err := lc.Listen(ctx, "tcp", bindingHost+":"+strconv.Itoa(communicationPort))
+		l, err := lc.Listen(ctx, "tcp", bindingHost+":"+strconv.Itoa(CommunicationPort))
 		if err == nil {
 			listener = l
 			break

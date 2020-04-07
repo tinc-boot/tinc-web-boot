@@ -71,12 +71,7 @@ func (network *Network) Update(config *Config) error {
 }
 
 func (network *Network) Read() (*Config, error) {
-	data, err := ioutil.ReadFile(network.configFile())
-	if err != nil {
-		return nil, err
-	}
-	var cfg Config
-	return &cfg, cfg.UnmarshalText(data)
+	return ConfigFromFile(network.configFile())
 }
 
 func (network *Network) Nodes() ([]string, error) {
