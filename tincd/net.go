@@ -55,6 +55,10 @@ func (impl *netImpl) Peers() []*Peer {
 	return impl.peers.List()
 }
 
+func (impl *netImpl) Peer(name string) (*Peer, bool) {
+	return impl.peers.Get(name)
+}
+
 func (impl *netImpl) Definition() *network.Network {
 	return impl.definition
 }

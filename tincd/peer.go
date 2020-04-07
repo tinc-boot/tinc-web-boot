@@ -99,6 +99,13 @@ func (pl *peersManager) List() []*Peer {
 	return cp
 }
 
+func (pl *peersManager) Get(name string) (*Peer, bool) {
+	pl.lock.RLock()
+	defer pl.lock.RUnlock()
+	v, ok := pl.list[name]
+	return v, ok
+}
+
 type Peer struct {
 	Node    string
 	Subnet  string

@@ -8,8 +8,8 @@ import (
 	"tinc-web-boot/network"
 )
 
-func New(ctx context.Context, storage *network.Storage, tincBin string) (*poolImpl, error) {
-	pool := &poolImpl{
+func New(ctx context.Context, storage *network.Storage, tincBin string) (*Tincd, error) {
+	pool := &Tincd{
 		ctx:     ctx,
 		tincBin: tincBin,
 		storage: storage,
@@ -40,7 +40,7 @@ func New(ctx context.Context, storage *network.Storage, tincBin string) (*poolIm
 	return pool, nil
 }
 
-type poolImpl struct {
+type Tincd struct {
 	tincBin string
 
 	lock sync.Mutex
@@ -50,7 +50,7 @@ type poolImpl struct {
 	storage *network.Storage
 }
 
-func (pool *poolImpl) Get(name string) (*netImpl, error) {
+func (pool *Tincd) Get(name string) (*netImpl, error) {
 	nw := pool.storage.Get(name)
 	if !nw.IsDefined() {
 		return nil, fmt.Errorf("network %s is not defined", name)
@@ -59,7 +59,7 @@ func (pool *poolImpl) Get(name string) (*netImpl, error) {
 	return v, nil
 }
 
-func (pool *poolImpl) Create(name string) (*netImpl, error) {
+func (pool *Tincd) Create(name string) (*netImpl, error) {
 	v, created := pool.ensure(pool.storage.Get(name))
 	if created {
 		return v, v.definition.Configure(pool.ctx, pool.tincBin)
@@ -67,7 +67,7 @@ func (pool *poolImpl) Create(name string) (*netImpl, error) {
 	return v, nil
 }
 
-func (pool *poolImpl) Remove(name string) error {
+func (pool *Tincd) Remove(name string) error {
 	pool.lock.Lock()
 	defer pool.lock.Unlock()
 
@@ -81,7 +81,7 @@ func (pool *poolImpl) Remove(name string) error {
 	return nil
 }
 
-func (pool *poolImpl) Nets() []*netImpl {
+func (pool *Tincd) Nets() []*netImpl {
 	pool.lock.Lock()
 	var ans = make([]*netImpl, 0, len(pool.nets))
 	for _, v := range pool.nets {
@@ -94,7 +94,7 @@ func (pool *poolImpl) Nets() []*netImpl {
 	return ans
 }
 
-func (pool *poolImpl) Stop() {
+func (pool *Tincd) Stop() {
 	var wg sync.WaitGroup
 
 	for _, impl := range pool.Nets() {
@@ -108,7 +108,7 @@ func (pool *poolImpl) Stop() {
 	wg.Wait()
 }
 
-func (pool *poolImpl) ensure(netw *network.Network) (*netImpl, bool) {
+func (pool *Tincd) ensure(netw *network.Network) (*netImpl, bool) {
 	pool.lock.Lock()
 	defer pool.lock.Unlock()
 	if pool.nets == nil {
