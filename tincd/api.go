@@ -48,6 +48,10 @@ func runAPI(ctx context.Context, requests chan<- peerReq, network *network.Netwo
 	}
 	defer listener.Close()
 	router := setupRoutes(ctx, requests, network, config)
+	go func() {
+		<-ctx.Done()
+		listener.Close()
+	}()
 	_ = router.RunListener(listener)
 }
 
