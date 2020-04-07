@@ -8,13 +8,37 @@ import (
 	"tinc-web-boot/network"
 )
 
-func New(ctx context.Context, storage *network.Storage, apiPort int, tincBin string) *poolImpl {
-	return &poolImpl{
+func New(ctx context.Context, storage *network.Storage, apiPort int, tincBin string) (*poolImpl, error) {
+	pool := &poolImpl{
 		ctx:     ctx,
 		apiPort: apiPort,
 		tincBin: tincBin,
 		storage: storage,
 	}
+
+	list, err := storage.List()
+	if err != nil {
+		return nil, err
+	}
+
+	var toStart []*netImpl
+
+	for _, ntw := range list {
+		impl, _ := pool.ensure(ntw)
+		cfg, err := ntw.Read()
+		if err != nil {
+			return nil, fmt.Errorf("read config of network %s: %w", ntw.Name(), err)
+		}
+		if cfg.AutoStart {
+			toStart = append(toStart, impl)
+		}
+	}
+
+	for _, impl := range toStart {
+		impl.Start()
+	}
+
+	return pool, nil
 }
 
 type poolImpl struct {

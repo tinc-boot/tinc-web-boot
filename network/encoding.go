@@ -13,6 +13,7 @@ func (cfg *Config) MarshalText() (text []byte, err error) {
 		"Name":      {cfg.Name},
 		"Port":      {fmt.Sprint(cfg.Port)},
 		"Interface": {cfg.Interface},
+		"AutoStart": {cfg.AutoStart},
 	}
 	for _, con := range cfg.ConnectTo {
 		params["ConnectTo"] = append(params["ConnectTo"], con)
@@ -26,6 +27,7 @@ func (cfg *Config) UnmarshalText(text []byte) error {
 	cfg.Interface = params.First("Interface", "")
 	cfg.Name = params.First("Name", "")
 	cfg.Port = params.FirstUint16("Port")
+	cfg.AutoStart = params.FirstBool("AutoStart")
 	return nil
 }
 
@@ -106,6 +108,11 @@ func (mm *multiMap) FirstUint16(name string) uint16 {
 	v := mm.First(name, "0")
 	x, _ := strconv.ParseUint(v, 10, 16)
 	return uint16(x)
+}
+
+func (mm *multiMap) FirstBool(name string) bool {
+	t := strings.ToLower(mm.First(name, "false"))
+	return t == "true" || t == "yes" || t == "on"
 }
 
 func parseContent(content string) (params multiMap, tail string) {

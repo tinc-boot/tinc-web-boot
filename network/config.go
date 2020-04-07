@@ -4,6 +4,7 @@ type Config struct {
 	Name      string
 	Port      uint16
 	Interface string
+	AutoStart bool
 	ConnectTo []string
 }
 
