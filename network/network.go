@@ -1,11 +1,15 @@
 package network
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"tinc-web-boot/utils"
 )
 
 type Storage struct {
@@ -83,7 +87,7 @@ func (network *Network) Nodes() ([]string, error) {
 }
 
 func (network *Network) Node(name string) (*Node, error) {
-	data, err := ioutil.ReadFile(network.node(name))
+	data, err := ioutil.ReadFile(network.NodeFile(name))
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +95,20 @@ func (network *Network) Node(name string) (*Node, error) {
 	return &nd, nd.UnmarshalText(data)
 }
 
-func (network *Network) configure(ctx context.Context, apiPort int, tincBin string) error {
+func (network *Network) Put(node *Node) error {
+	data, err := node.MarshalText()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(network.NodeFile(node.Name), data, 0755)
+}
+
+func (network *Network) IsDefined() bool {
+	v, err := os.Stat(network.configFile())
+	return err == nil && !v.IsDir()
+}
+
+func (network *Network) Configure(ctx context.Context, apiPort int, tincBin string) error {
 	config, err := network.Read()
 	if err != nil {
 		return err
@@ -116,7 +133,54 @@ func (network *Network) configure(ctx context.Context, apiPort int, tincBin stri
 	if err := network.saveScript("subnet-down", subnetDown(selfExec, apiPort)); err != nil {
 		return err
 	}
+
+	if err := network.generateKeysIfNeeded(ctx, tincBin); err != nil {
+		return fmt.Errorf("%s: generate keys: %w", network.Name(), err)
+	}
+	if err := network.indexPublicNodes(); err != nil {
+		return fmt.Errorf("%s: index public nodes: %w", network.Name(), err)
+	}
 	return network.postConfigure(ctx, config, tincBin)
+}
+
+func (network *Network) Logfile() string {
+	return filepath.Join(network.Root, "log.txt")
+}
+
+func (network *Network) Pidfile() string {
+	return filepath.Join(network.Root, "pid.run")
+}
+
+func (network *Network) Destroy() error {
+	return os.RemoveAll(network.Root)
+}
+
+func (network *Network) indexPublicNodes() error {
+	config, err := network.Read()
+	if err != nil {
+		return err
+	}
+
+	var publicNodes []string
+
+	list, err := network.Nodes()
+	if err != nil {
+		return err
+	}
+
+	for _, node := range list {
+		info, err := network.Node(node)
+		if err != nil {
+			return fmt.Errorf("parse node %s: %w", node, err)
+		}
+		if len(info.Address) > 0 {
+			publicNodes = append(publicNodes, node)
+		}
+	}
+
+	config.ConnectTo = publicNodes
+
+	return network.Update(config)
 }
 
 func (network *Network) configFile() string {
@@ -127,7 +191,7 @@ func (network *Network) hosts() string {
 	return filepath.Join(network.Root, "hosts")
 }
 
-func (network *Network) node(name string) string {
+func (network *Network) NodeFile(name string) string {
 	name = regexp.MustCompile(`^[^a-zA-Z0-9_]+$`).ReplaceAllString(name, "")
 	return filepath.Join(network.hosts(), name)
 }
@@ -136,11 +200,37 @@ func (network *Network) scriptFile(name string) string {
 	return filepath.Join(network.Root, name+scriptSuffix)
 }
 
+func (network *Network) privateKeyFile() string {
+	return filepath.Join(network.Root, "rsa_key.priv")
+}
+
 func (network *Network) saveScript(name string, content string) error {
 	file := network.scriptFile(name)
 	err := ioutil.WriteFile(name, []byte(content), 0755)
 	if err != nil {
+		return fmt.Errorf("%s: generate script %s: %w", network.Name(), name, err)
+	}
+	err = postProcessScript(file)
+	if err != nil {
+		return fmt.Errorf("%s: post-process script %s: %w", network.Name(), name, err)
+	}
+	return nil
+}
+
+func (network *Network) generateKeysIfNeeded(ctx context.Context, tincBin string) error {
+	_, err := os.Stat(network.privateKeyFile())
+	if err == nil {
+		return nil
+	}
+	if !os.IsNotExist(err) {
 		return err
 	}
-	return postProcessScript(file)
+
+	cmd := exec.CommandContext(ctx, tincBin, "-K", "4096", "-c", network.Root)
+	cmd.Stdin = bytes.NewReader(nil)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	utils.SetCmdAttrs(cmd)
+
+	return cmd.Run()
 }
