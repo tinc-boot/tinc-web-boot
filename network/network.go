@@ -5,10 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"tinc-web-boot/utils"
 )
 
@@ -17,6 +19,11 @@ type Storage struct {
 }
 
 func (st *Storage) Init() error {
+	abs, err := filepath.Abs(st.Root)
+	if err != nil {
+		return err
+	}
+	st.Root = abs
 	return os.MkdirAll(st.Root, 0755)
 }
 
@@ -109,6 +116,12 @@ func (network *Network) IsDefined() bool {
 }
 
 func (network *Network) Configure(ctx context.Context, apiPort int, tincBin string) error {
+	if err := os.MkdirAll(network.hosts(), 0755); err != nil {
+		return err
+	}
+	if err := network.defineConfiguration(); err != nil {
+		return err
+	}
 	config, err := network.Read()
 	if err != nil {
 		return err
@@ -183,6 +196,42 @@ func (network *Network) indexPublicNodes() error {
 	return network.Update(config)
 }
 
+func (network *Network) defineConfiguration() error {
+	if network.IsDefined() {
+		return nil
+	}
+	hostname, _ := os.Hostname()
+	suffix := utils.RandStringRunesCustom(6, suffixRunes)
+	nodeName := regexp.MustCompile(`[^a-z0-9]*`).ReplaceAllString(strings.ToLower(hostname), "") + "_" + suffix
+	addressBytes := [4]uint8{
+		10,
+		uint8(rand.Intn(255)),
+		uint8(rand.Intn(255)),
+		1 + uint8(rand.Intn(254)),
+	}
+	subnet := fmt.Sprintf("%d.%d.%d.%d/%d", addressBytes[0],
+		addressBytes[1], addressBytes[2], addressBytes[3], 32)
+
+	config := &Config{
+		Name:      nodeName,
+		Port:      uint16(30000 + rand.Intn(35535)),
+		Interface: "tinc" + suffix,
+		AutoStart: false,
+	}
+
+	if err := network.Update(config); err != nil {
+		return err
+	}
+
+	nodeConfig := &Node{
+		Name:   nodeName,
+		Subnet: subnet,
+		Port:   config.Port,
+	}
+
+	return network.Put(nodeConfig)
+}
+
 func (network *Network) configFile() string {
 	return filepath.Join(network.Root, "tinc.conf")
 }
@@ -206,7 +255,7 @@ func (network *Network) privateKeyFile() string {
 
 func (network *Network) saveScript(name string, content string) error {
 	file := network.scriptFile(name)
-	err := ioutil.WriteFile(name, []byte(content), 0755)
+	err := ioutil.WriteFile(file, []byte(content), 0755)
 	if err != nil {
 		return fmt.Errorf("%s: generate script %s: %w", network.Name(), name, err)
 	}
@@ -234,3 +283,5 @@ func (network *Network) generateKeysIfNeeded(ctx context.Context, tincBin string
 
 	return cmd.Run()
 }
+
+var suffixRunes = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
