@@ -8,10 +8,9 @@ import (
 	"tinc-web-boot/network"
 )
 
-func New(ctx context.Context, storage *network.Storage, apiPort int, tincBin string) (*poolImpl, error) {
+func New(ctx context.Context, storage *network.Storage, tincBin string) (*poolImpl, error) {
 	pool := &poolImpl{
 		ctx:     ctx,
-		apiPort: apiPort,
 		tincBin: tincBin,
 		storage: storage,
 	}
@@ -42,7 +41,6 @@ func New(ctx context.Context, storage *network.Storage, apiPort int, tincBin str
 }
 
 type poolImpl struct {
-	apiPort int
 	tincBin string
 
 	lock sync.Mutex
@@ -64,7 +62,7 @@ func (pool *poolImpl) Get(name string) (*netImpl, error) {
 func (pool *poolImpl) Create(name string) (*netImpl, error) {
 	v, created := pool.ensure(pool.storage.Get(name))
 	if created {
-		return v, v.definition.Configure(pool.ctx, pool.apiPort, pool.tincBin)
+		return v, v.definition.Configure(pool.ctx, pool.tincBin)
 	}
 	return v, nil
 }
@@ -124,7 +122,6 @@ func (pool *poolImpl) ensure(netw *network.Network) (*netImpl, bool) {
 		ctx:        pool.ctx,
 		definition: netw,
 		tincBin:    pool.tincBin,
-		apiPort:    pool.apiPort,
 	}
 	pool.nets[netw.Name()] = v
 	return v, true

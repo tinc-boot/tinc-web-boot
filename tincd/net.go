@@ -12,7 +12,6 @@ import (
 )
 
 type netImpl struct {
-	apiPort int
 	tincBin string
 	ctx     context.Context
 
@@ -84,7 +83,7 @@ func (impl *netImpl) unsafeStop() {
 }
 
 func (impl *netImpl) run(global context.Context) error {
-	if err := impl.definition.Configure(global, impl.apiPort, impl.tincBin); err != nil {
+	if err := impl.definition.Configure(global, impl.tincBin); err != nil {
 		return fmt.Errorf("configure: %w", err)
 	}
 

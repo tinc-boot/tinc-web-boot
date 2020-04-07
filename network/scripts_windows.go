@@ -9,11 +9,11 @@ netsh interface ipv4 set address name="%INTERFACE%" static {{.Subnet}} store=per
 const tincDownText = ``
 
 const subnetUpText = `
-{{.Executable}} subnet add /api-port {{.Port}}
+{{.Executable}} subnet add
 `
 
 const subnetDownText = `
-{{.Executable}} subnet remove /api-port {{.Port}}
+{{.Executable}} subnet remove
 `
 
 func postProcessScript(filename string) error { return nil }

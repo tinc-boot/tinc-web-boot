@@ -110,7 +110,7 @@ func (network *Network) IsDefined() bool {
 	return err == nil && !v.IsDir()
 }
 
-func (network *Network) Configure(ctx context.Context, apiPort int, tincBin string) error {
+func (network *Network) Configure(ctx context.Context, tincBin string) error {
 	if err := os.MkdirAll(network.hosts(), 0755); err != nil {
 		return err
 	}
@@ -135,10 +135,10 @@ func (network *Network) Configure(ctx context.Context, apiPort int, tincBin stri
 	if err := network.saveScript("tinc-down", tincDown(selfNode)); err != nil {
 		return err
 	}
-	if err := network.saveScript("subnet-up", subnetUp(selfExec, apiPort)); err != nil {
+	if err := network.saveScript("subnet-up", subnetUp(selfExec)); err != nil {
 		return err
 	}
-	if err := network.saveScript("subnet-down", subnetDown(selfExec, apiPort)); err != nil {
+	if err := network.saveScript("subnet-down", subnetDown(selfExec)); err != nil {
 		return err
 	}
 

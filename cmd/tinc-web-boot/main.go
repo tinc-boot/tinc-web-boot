@@ -29,18 +29,15 @@ type Subnet struct {
 }
 
 type AddSubnet struct {
-	APIPort int    `name:"api-port" env:"API_PORT" help:"API port" default:"1655"`
-	Subnet  string `name:"subnet" env:"SUBNET" help:"Subnet address" required:"yes"`
-	Node    string `name:"node" env:"NODE" help:"Node name" required:"yes"`
+	Subnet string `name:"subnet" env:"SUBNET" help:"Subnet address" required:"yes"`
+	Node   string `name:"node" env:"NODE" help:"Node name" required:"yes"`
 }
 
 type RemoveSubnet struct {
-	APIPort int    `name:"api-port" env:"API_PORT" help:"API port" default:"1655"`
-	Node    string `name:"node" env:"NODE" help:"Node name" required:"yes"`
+	Node string `name:"node" env:"NODE" help:"Node name" required:"yes"`
 }
 
 type Root struct {
-	APIPort int    `name:"api-port" env:"API_PORT" help:"API port" default:"1655"`
 	TincBin string `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
 	Host    string `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
 	Dir     string `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
@@ -77,7 +74,7 @@ func (m *Root) Run() error {
 		return err
 	}
 
-	pool, err := tincd.New(ctx, stor, m.APIPort, binary)
+	pool, err := tincd.New(ctx, stor, binary)
 	if err != nil {
 		return err
 	}
@@ -117,7 +114,7 @@ func (m *AddSubnet) Run() error {
 	}
 	address := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
 
-	url := "http://" + address + ":" + strconv.Itoa(m.APIPort) + "/rpc/watch"
+	url := "http://" + address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/watch"
 	for {
 
 		err := post(ctx, url, map[string]string{
@@ -162,7 +159,7 @@ func (m *RemoveSubnet) Run() error {
 	}
 	address := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
 
-	url := "http://" + address + ":" + strconv.Itoa(m.APIPort) + "/rpc/forget"
+	url := "http://" + address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/forget"
 	for {
 
 		err := post(ctx, url, map[string]string{

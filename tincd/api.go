@@ -13,19 +13,18 @@ import (
 )
 
 const (
-	retryInterval     = 1 * time.Second
-	CommunicationPort = 1655
+	retryInterval = 1 * time.Second
 )
 
-func runAPI(ctx context.Context, requests chan<- peerReq, network *network.Network) {
-	config, err := network.Read()
+func runAPI(ctx context.Context, requests chan<- peerReq, ntw *network.Network) {
+	config, err := ntw.Read()
 	if err != nil {
-		log.Println(network.Name(), ": read config", err)
+		log.Println(ntw.Name(), ": read config", err)
 		return
 	}
-	selfNode, err := network.Node(config.Name)
+	selfNode, err := ntw.Node(config.Name)
 	if err != nil {
-		log.Println(network.Name(), ": read self node", err)
+		log.Println(ntw.Name(), ": read self node", err)
 		return
 	}
 	bindingHost := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
@@ -34,12 +33,12 @@ func runAPI(ctx context.Context, requests chan<- peerReq, network *network.Netwo
 	var listener net.Listener
 	for {
 
-		l, err := lc.Listen(ctx, "tcp", bindingHost+":"+strconv.Itoa(CommunicationPort))
+		l, err := lc.Listen(ctx, "tcp", bindingHost+":"+strconv.Itoa(network.CommunicationPort))
 		if err == nil {
 			listener = l
 			break
 		}
-		log.Println(network.Name(), "listen:", err)
+		log.Println(ntw.Name(), "listen:", err)
 		select {
 		case <-ctx.Done():
 			return
@@ -47,7 +46,7 @@ func runAPI(ctx context.Context, requests chan<- peerReq, network *network.Netwo
 		}
 	}
 	defer listener.Close()
-	router := setupRoutes(ctx, requests, network, config)
+	router := setupRoutes(ctx, requests, ntw, config)
 	go func() {
 		<-ctx.Done()
 		listener.Close()

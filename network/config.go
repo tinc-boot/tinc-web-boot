@@ -1,5 +1,9 @@
 package network
 
+const (
+	CommunicationPort = 1655
+)
+
 type Config struct {
 	Name      string
 	Port      uint16

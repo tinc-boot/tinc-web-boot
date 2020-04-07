@@ -128,7 +128,7 @@ func (peer *Peer) run(ctx context.Context) {
 
 func (peer *Peer) fetchConfig(ctx context.Context) (*network.Node, error) {
 	addr := strings.TrimSpace(strings.Split(peer.Subnet, "/")[0])
-	url := "http://" + addr + ":" + strconv.Itoa(CommunicationPort) + "/"
+	url := "http://" + addr + ":" + strconv.Itoa(network.CommunicationPort) + "/"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

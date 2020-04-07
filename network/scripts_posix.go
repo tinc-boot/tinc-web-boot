@@ -15,11 +15,11 @@ ip link set dev $INTERFACE down
 `
 
 const subnetUpText = `#!/bin/sh
-{{.Executable}} subnet add --api-port {{.Port}}
+{{.Executable}} subnet add
 `
 
 const subnetDownText = `#!/bin/sh
-{{.Executable}} subnet remove --api-port {{.Port}}
+{{.Executable}} subnet remove
 `
 
 func postProcessScript(filename string) error {
