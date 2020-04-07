@@ -1,0 +1,34 @@
+package network
+
+import "github.com/phayes/permbits"
+
+const scriptSuffix = ""
+
+const tincUpTxt = `#!/usr/bin/sh
+ip addr add {{.Subnet}} dev $INTERFACE
+ip link set dev $INTERFACE up
+`
+
+const tincDownText = `#!/bin/sh
+ip addr del {{.Subnet}} dev $INTERFACE
+ip link set dev $INTERFACE down
+`
+
+const subnetUpText = `#!/bin/sh
+{{.Executable}} subnet add --api-port {{.Port}}
+`
+
+const subnetDownText = `#!/bin/sh
+{{.Executable}} subnet remove --api-port {{.Port}}
+`
+
+func postProcessScript(filename string) error {
+	stat, err := permbits.Stat(filename)
+	if err != nil {
+		return err
+	}
+	stat.SetGroupExecute(true)
+	stat.SetOtherExecute(true)
+	stat.SetUserExecute(true)
+	return permbits.Chmod(filename, stat)
+}
