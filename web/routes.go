@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
 	"tinc-web-boot/tincd"
+	"tinc-web-boot/web/internal"
+	"tinc-web-boot/web/shared"
 )
 
 func New(pool *tincd.Tincd, dev bool) *gin.Engine {
@@ -34,7 +36,7 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 	}
 
 	var jsonRouter jsonrpc2.Router
-	RegisterTincWeb(&jsonRouter, &api{pool: pool})
+	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
 
 	router.POST("/api", gin.WrapH(jsonrpc2.Handler(&jsonRouter)))
 
@@ -45,10 +47,10 @@ type api struct {
 	pool *tincd.Tincd
 }
 
-func (srv *api) Networks() ([]*Network, error) {
-	var ans []*Network
+func (srv *api) Networks() ([]*shared.Network, error) {
+	var ans []*shared.Network
 	for _, ntw := range srv.pool.Nets() {
-		ans = append(ans, &Network{
+		ans = append(ans, &shared.Network{
 			Name:    ntw.Definition().Name(),
 			Running: ntw.IsRunning(),
 		})
@@ -56,7 +58,7 @@ func (srv *api) Networks() ([]*Network, error) {
 	return ans, nil
 }
 
-func (srv *api) Network(name string) (*Network, error) {
+func (srv *api) Network(name string) (*shared.Network, error) {
 	ntw, err := srv.pool.Get(name)
 	if err != nil {
 		return nil, err
@@ -65,14 +67,14 @@ func (srv *api) Network(name string) (*Network, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Network{
+	return &shared.Network{
 		Name:    ntw.Definition().Name(),
 		Running: ntw.IsRunning(),
 		Config:  config,
 	}, nil
 }
 
-func (srv *api) Peers(network string) ([]*PeerInfo, error) {
+func (srv *api) Peers(network string) ([]*shared.PeerInfo, error) {
 	ntw, err := srv.pool.Get(network)
 	if err != nil {
 		return nil, err
@@ -83,10 +85,10 @@ func (srv *api) Peers(network string) ([]*PeerInfo, error) {
 		return nil, err
 	}
 
-	var ans []*PeerInfo
+	var ans []*shared.PeerInfo
 	for _, name := range list {
 		info, active := ntw.Peer(name)
-		ans = append(ans, &PeerInfo{
+		ans = append(ans, &shared.PeerInfo{
 			Name:   name,
 			Online: active,
 			Status: info,
@@ -95,7 +97,7 @@ func (srv *api) Peers(network string) ([]*PeerInfo, error) {
 	return ans, nil
 }
 
-func (srv *api) Peer(network, name string) (*PeerInfo, error) {
+func (srv *api) Peer(network, name string) (*shared.PeerInfo, error) {
 	ntw, err := srv.pool.Get(network)
 	if err != nil {
 		return nil, err
@@ -105,7 +107,7 @@ func (srv *api) Peer(network, name string) (*PeerInfo, error) {
 		return nil, err
 	}
 	info, active := ntw.Peer(node.Name)
-	return &PeerInfo{
+	return &shared.PeerInfo{
 		Name:          node.Name,
 		Online:        active,
 		Status:        info,
@@ -113,12 +115,12 @@ func (srv *api) Peer(network, name string) (*PeerInfo, error) {
 	}, nil
 }
 
-func (srv *api) Create(name string) (*Network, error) {
+func (srv *api) Create(name string) (*shared.Network, error) {
 	ntw, err := srv.pool.Create(name)
 	if err != nil {
 		return nil, err
 	}
-	return &Network{
+	return &shared.Network{
 		Name:    ntw.Definition().Name(),
 		Running: ntw.IsRunning(),
 	}, nil
@@ -129,25 +131,25 @@ func (srv *api) Remove(network string) (bool, error) {
 	return exists, err
 }
 
-func (srv *api) Start(network string) (*Network, error) {
+func (srv *api) Start(network string) (*shared.Network, error) {
 	ntw, err := srv.pool.Get(network)
 	if err != nil {
 		return nil, err
 	}
 	ntw.Start()
-	return &Network{
+	return &shared.Network{
 		Name:    ntw.Definition().Name(),
 		Running: ntw.IsRunning(),
 	}, nil
 }
 
-func (srv *api) Stop(network string) (*Network, error) {
+func (srv *api) Stop(network string) (*shared.Network, error) {
 	ntw, err := srv.pool.Get(network)
 	if err != nil {
 		return nil, err
 	}
 	ntw.Stop()
-	return &Network{
+	return &shared.Network{
 		Name:    ntw.Definition().Name(),
 		Running: ntw.IsRunning(),
 	}, nil

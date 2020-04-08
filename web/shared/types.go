@@ -1,4 +1,4 @@
-package web
+package shared
 
 import (
 	"tinc-web-boot/network"

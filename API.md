@@ -37,7 +37,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | running | `bool` |  |
-| config,omitempty | `*network.Config` |  |
+| config | `*network.Config` |  |
 
 ## TincWeb.Network
 
@@ -68,7 +68,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | running | `bool` |  |
-| config,omitempty | `*network.Config` |  |
+| config | `*network.Config` |  |
 
 ## TincWeb.Create
 
@@ -99,7 +99,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | running | `bool` |  |
-| config,omitempty | `*network.Config` |  |
+| config | `*network.Config` |  |
 
 ## TincWeb.Remove
 
@@ -154,7 +154,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | running | `bool` |  |
-| config,omitempty | `*network.Config` |  |
+| config | `*network.Config` |  |
 
 ## TincWeb.Stop
 
@@ -185,7 +185,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | running | `bool` |  |
-| config,omitempty | `*network.Config` |  |
+| config | `*network.Config` |  |
 
 ## TincWeb.Peers
 
@@ -216,8 +216,8 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | online | `bool` |  |
-| status,omitempty | `*tincd.Peer` |  |
-| config,omitempty | `*network.Node` |  |
+| status | `*tincd.Peer` |  |
+| config | `*network.Node` |  |
 
 ## TincWeb.Peer
 
@@ -249,5 +249,5 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | online | `bool` |  |
-| status,omitempty | `*tincd.Peer` |  |
-| config,omitempty | `*network.Node` |  |
+| status | `*tincd.Peer` |  |
+| config | `*network.Node` |  |

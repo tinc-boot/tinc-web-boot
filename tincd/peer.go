@@ -107,9 +107,9 @@ func (pl *peersManager) Get(name string) (*Peer, bool) {
 }
 
 type Peer struct {
-	Node    string
-	Subnet  string
-	Fetched bool
+	Node    string `json:"node"`
+	Subnet  string `json:"subnet"`
+	Fetched bool   `json:"fetched"`
 	stop    func()
 	network *network.Network
 }
