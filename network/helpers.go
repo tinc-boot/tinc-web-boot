@@ -8,5 +8,5 @@ func ConfigFromFile(name string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &cfg, cfg.UnmarshalText(data)
+	return &cfg, cfg.Parse(data)
 }

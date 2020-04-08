@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alecthomas/kong"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"tinc-web-boot/cmd/tinc-web-boot/internal"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
+	"tinc-web-boot/web"
 )
 
 type Main struct {
@@ -30,17 +32,19 @@ type Subnet struct {
 
 type AddSubnet struct {
 	Subnet string `name:"subnet" env:"SUBNET" help:"Subnet address" required:"yes"`
-	Node   string `name:"node" env:"NODE" help:"Node name" required:"yes"`
+	Node   string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
 }
 
 type RemoveSubnet struct {
-	Node string `name:"node" env:"NODE" help:"Node name" required:"yes"`
+	Node string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
 }
 
 type Root struct {
 	TincBin string `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
 	Host    string `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
 	Dir     string `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
+	Dev     bool   `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
+	internal.HttpServer
 }
 
 func main() {
@@ -51,6 +55,10 @@ func main() {
 }
 
 func (m *Root) Run() error {
+	if !m.Dev {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	binary, err := internal.DetectTincBinary(m.TincBin)
 	if err != nil {
 		return err
@@ -80,15 +88,14 @@ func (m *Root) Run() error {
 	}
 	defer pool.Stop()
 
-	impl, err := pool.Create("test")
+	_, err = pool.Create("test")
 	if err != nil {
 		return err
 	}
 
-	impl.Start()
-	<-ctx.Done()
+	webApi := web.New(pool, m.Dev)
 
-	return ctx.Err()
+	return m.Serve(ctx, webApi)
 }
 
 func (m *AddSubnet) Run() error {

@@ -155,5 +155,5 @@ func (peer *Peer) fetchConfig(ctx context.Context) (*network.Node, error) {
 	}
 
 	var node network.Node
-	return &node, node.UnmarshalText(data)
+	return &node, node.Parse(data)
 }

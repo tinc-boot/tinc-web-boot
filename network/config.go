@@ -5,22 +5,22 @@ const (
 )
 
 type Config struct {
-	Name      string
-	Port      uint16
-	Interface string
-	AutoStart bool
-	ConnectTo []string
+	Name      string   `json:"name"`
+	Port      uint16   `json:"port"`
+	Interface string   `json:"interface"`
+	AutoStart bool     `json:"autostart"`
+	ConnectTo []string `json:"connectTo,omitempty"`
 }
 
 type Address struct {
-	Host string
-	Port uint16
+	Host string `json:"host"`
+	Port uint16 `json:"port,omitempty"`
 }
 
 type Node struct {
-	Name      string
-	Subnet    string
-	Port      uint16
-	Address   []Address
-	PublicKey string
+	Name      string    `json:"name"`
+	Subnet    string    `json:"subnet"`
+	Port      uint16    `json:"port"`
+	Address   []Address `json:"address,omitempty"`
+	PublicKey string    `json:"publicKey"`
 }

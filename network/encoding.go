@@ -1,14 +1,17 @@
 package network
 
 import (
-	"encoding"
 	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-func (cfg *Config) MarshalText() (text []byte, err error) {
+type builder interface {
+	Build() (text []byte, err error)
+}
+
+func (cfg *Config) Build() (text []byte, err error) {
 	var params = map[string][]interface{}{
 		"Name":      {cfg.Name},
 		"Port":      {fmt.Sprint(cfg.Port)},
@@ -21,7 +24,7 @@ func (cfg *Config) MarshalText() (text []byte, err error) {
 	return makeContent(params, "")
 }
 
-func (cfg *Config) UnmarshalText(text []byte) error {
+func (cfg *Config) Parse(text []byte) error {
 	params, _ := parseContent(string(text))
 	cfg.ConnectTo = params["ConnectTo"]
 	cfg.Interface = params.First("Interface", "")
@@ -31,7 +34,7 @@ func (cfg *Config) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (a *Address) MarshalText() (text []byte, err error) {
+func (a *Address) Build() (text []byte, err error) {
 	out := a.Host
 	if a.Port != 0 {
 		out += " " + strconv.FormatUint(uint64(a.Port), 10)
@@ -39,7 +42,7 @@ func (a *Address) MarshalText() (text []byte, err error) {
 	return []byte(out), nil
 }
 
-func (a *Address) UnmarshalText(text []byte) error {
+func (a *Address) Parse(text []byte) error {
 	vals := strings.Split(string(text), " ")
 	a.Host = vals[0]
 	if len(vals) == 1 {
@@ -53,7 +56,7 @@ func (a *Address) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (n *Node) MarshalText() (text []byte, err error) {
+func (n *Node) Build() (text []byte, err error) {
 	params := map[string][]interface{}{
 		"Name":   {n.Name},
 		"Subnet": {n.Subnet},
@@ -66,7 +69,7 @@ func (n *Node) MarshalText() (text []byte, err error) {
 	return makeContent(params, n.PublicKey)
 }
 
-func (n *Node) UnmarshalText(data []byte) error {
+func (n *Node) Parse(data []byte) error {
 	params, tail := parseContent(string(data))
 	n.Name = first(params["Name"], "")
 	n.Subnet = first(params["Subnet"], "")
@@ -74,7 +77,7 @@ func (n *Node) UnmarshalText(data []byte) error {
 	n.Address = nil
 	for _, addr := range params["Address"] {
 		var a Address
-		err := a.UnmarshalText([]byte(addr))
+		err := a.Parse([]byte(addr))
 		if err != nil {
 			return err
 		}
@@ -154,8 +157,8 @@ func makeContent(params map[string][]interface{}, tail string) ([]byte, error) {
 				continue
 			}
 			var val []byte
-			if coder, ok := item.(encoding.TextMarshaler); ok {
-				x, err := coder.MarshalText()
+			if coder, ok := item.(builder); ok {
+				x, err := coder.Build()
 				if err != nil {
 					return nil, err
 				}

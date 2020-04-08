@@ -67,7 +67,7 @@ func (pool *Tincd) Create(name string) (*netImpl, error) {
 	return v, nil
 }
 
-func (pool *Tincd) Remove(name string) error {
+func (pool *Tincd) Remove(name string) (bool, error) {
 	pool.lock.Lock()
 	defer pool.lock.Unlock()
 
@@ -76,9 +76,9 @@ func (pool *Tincd) Remove(name string) error {
 
 	if ok {
 		v.Stop()
-		return v.definition.Destroy()
+		return ok, v.definition.Destroy()
 	}
-	return nil
+	return ok, nil
 }
 
 func (pool *Tincd) Nets() []*netImpl {

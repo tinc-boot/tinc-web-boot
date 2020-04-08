@@ -2,12 +2,11 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/reddec/jsonrpc2"
 	"tinc-web-boot/tincd"
 )
 
 func New(pool *tincd.Tincd, dev bool) *gin.Engine {
-	wrapper := &api{pool: pool}
 
 	router := gin.Default()
 
@@ -34,15 +33,10 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 		})
 	}
 
-	api := router.Group("/api")
-	api.GET("/networks", wrapper.listNetworks)
-	api.POST("/networks", wrapper.createNetwork)
+	var jsonRouter jsonrpc2.Router
+	RegisterTincWeb(&jsonRouter, &api{pool: pool})
 
-	api.GET("/network/:name", wrapper.getNetwork)
-	api.DELETE("/network/:name", wrapper.removeNetwork)
-	api.POST("/network/:name/status", wrapper.controlNetwork)
-	api.GET("/network/:name/peers", wrapper.listPeers)
-	api.GET("/network/:name/peer/:peer", wrapper.getPeer)
+	router.POST("/api", gin.WrapH(jsonrpc2.Handler(&jsonRouter)))
 
 	return router
 }
@@ -51,132 +45,110 @@ type api struct {
 	pool *tincd.Tincd
 }
 
-func (api *api) listNetworks(gctx *gin.Context) {
-	var ans []Network
-	for _, ntw := range api.pool.Nets() {
-		ans = append(ans, Network{
+func (srv *api) Networks() ([]*Network, error) {
+	var ans []*Network
+	for _, ntw := range srv.pool.Nets() {
+		ans = append(ans, &Network{
 			Name:    ntw.Definition().Name(),
 			Running: ntw.IsRunning(),
 		})
 	}
-	gctx.IndentedJSON(http.StatusOK, ans)
+	return ans, nil
 }
 
-func (api *api) getNetwork(gctx *gin.Context) {
-	ntw, err := api.pool.Get(gctx.Param("name"))
+func (srv *api) Network(name string) (*Network, error) {
+	ntw, err := srv.pool.Get(name)
 	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return nil, err
 	}
 	config, err := ntw.Definition().Read()
 	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return nil, err
 	}
-	gctx.IndentedJSON(http.StatusOK, Network{
+	return &Network{
 		Name:    ntw.Definition().Name(),
 		Running: ntw.IsRunning(),
 		Config:  config,
-	})
+	}, nil
 }
 
-func (api *api) createNetwork(gctx *gin.Context) {
-	var params struct {
-		Name string `json:"name"`
-	}
-
-	if err := gctx.BindJSON(&params); err != nil {
-		return
-	}
-
-	ntw, err := api.pool.Create(params.Name)
+func (srv *api) Peers(network string) ([]*PeerInfo, error) {
+	ntw, err := srv.pool.Get(network)
 	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	gctx.IndentedJSON(http.StatusOK, Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
-	})
-}
-
-func (api *api) controlNetwork(gctx *gin.Context) {
-	var params struct {
-		Start bool `json:"start"`
-	}
-
-	if err := gctx.BindJSON(&params); err != nil {
-		return
-	}
-
-	ntw, err := api.pool.Get(gctx.Param("name"))
-	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	if params.Start {
-		ntw.Start()
-	} else {
-		ntw.Stop()
-	}
-	gctx.IndentedJSON(http.StatusOK, Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
-	})
-}
-
-func (api *api) removeNetwork(gctx *gin.Context) {
-	err := api.pool.Remove(gctx.Param("name"))
-	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	gctx.AbortWithStatus(http.StatusNoContent)
-}
-
-func (api *api) listPeers(gctx *gin.Context) {
-	ntw, err := api.pool.Get(gctx.Param("name"))
-	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return nil, err
 	}
 
 	list, err := ntw.Definition().Nodes()
 	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return nil, err
 	}
 
-	var ans []Peer
+	var ans []*PeerInfo
 	for _, name := range list {
 		info, active := ntw.Peer(name)
-		ans = append(ans, Peer{
+		ans = append(ans, &PeerInfo{
 			Name:   name,
 			Online: active,
 			Status: info,
 		})
 	}
-
-	gctx.IndentedJSON(http.StatusOK, ans)
+	return ans, nil
 }
 
-func (api *api) getPeer(gctx *gin.Context) {
-	ntw, err := api.pool.Get(gctx.Param("name"))
+func (srv *api) Peer(network, name string) (*PeerInfo, error) {
+	ntw, err := srv.pool.Get(network)
 	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return nil, err
 	}
-	node, err := ntw.Definition().Node(gctx.Param("peer"))
+	node, err := ntw.Definition().Node(name)
 	if err != nil {
-		gctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return nil, err
 	}
 	info, active := ntw.Peer(node.Name)
-	gctx.IndentedJSON(http.StatusOK, Peer{
+	return &PeerInfo{
 		Name:          node.Name,
 		Online:        active,
 		Status:        info,
 		Configuration: node,
-	})
+	}, nil
+}
+
+func (srv *api) Create(name string) (*Network, error) {
+	ntw, err := srv.pool.Create(name)
+	if err != nil {
+		return nil, err
+	}
+	return &Network{
+		Name:    ntw.Definition().Name(),
+		Running: ntw.IsRunning(),
+	}, nil
+}
+
+func (srv *api) Remove(network string) (bool, error) {
+	exists, err := srv.pool.Remove(network)
+	return exists, err
+}
+
+func (srv *api) Start(network string) (*Network, error) {
+	ntw, err := srv.pool.Get(network)
+	if err != nil {
+		return nil, err
+	}
+	ntw.Start()
+	return &Network{
+		Name:    ntw.Definition().Name(),
+		Running: ntw.IsRunning(),
+	}, nil
+}
+
+func (srv *api) Stop(network string) (*Network, error) {
+	ntw, err := srv.pool.Get(network)
+	if err != nil {
+		return nil, err
+	}
+	ntw.Stop()
+	return &Network{
+		Name:    ntw.Definition().Name(),
+		Running: ntw.IsRunning(),
+	}, nil
 }

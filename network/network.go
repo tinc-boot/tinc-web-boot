@@ -63,7 +63,7 @@ func (network *Network) Update(config *Config) error {
 	if err != nil {
 		return err
 	}
-	data, err := config.MarshalText()
+	data, err := config.Build()
 	if err != nil {
 		return err
 	}
@@ -94,11 +94,11 @@ func (network *Network) Node(name string) (*Node, error) {
 		return nil, err
 	}
 	var nd Node
-	return &nd, nd.UnmarshalText(data)
+	return &nd, nd.Parse(data)
 }
 
 func (network *Network) Put(node *Node) error {
-	data, err := node.MarshalText()
+	data, err := node.Build()
 	if err != nil {
 		return err
 	}
