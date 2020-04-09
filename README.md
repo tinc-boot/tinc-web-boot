@@ -40,5 +40,5 @@ go build -v -o tinc-web-boot cmd/tinc-web-boot/main.go
 ## Run (for development)
 
 ```
-sudo ./tinc-web-boot --dev
+sudo ./tinc-web-boot run --dev
 ```
