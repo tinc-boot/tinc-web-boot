@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	retryInterval = 1 * time.Second
+	retryInterval     = 1 * time.Second
+	nodesListInterval = 15 * time.Second
 )
 
 func runAPI(ctx context.Context, requests chan<- peerReq, ntw *network.Network) {
@@ -54,7 +55,7 @@ func runAPI(ctx context.Context, requests chan<- peerReq, ntw *network.Network) 
 	_ = router.RunListener(listener)
 }
 
-func setupRoutes(ctx context.Context, requests chan<- peerReq, network *network.Network, config *network.Config) *gin.Engine {
+func setupRoutes(ctx context.Context, requests chan<- peerReq, ntw *network.Network, config *network.Config) *gin.Engine {
 	router := gin.Default()
 	router.POST("/rpc/watch", func(gctx *gin.Context) {
 		var params struct {
@@ -94,9 +95,34 @@ func setupRoutes(ctx context.Context, requests chan<- peerReq, network *network.
 		gctx.AbortWithStatus(http.StatusNoContent)
 	})
 
+	router.GET("/rpc/nodes", func(gctx *gin.Context) {
+		var nodes nodeList
+		names, err := ntw.Nodes()
+		if err != nil {
+			gctx.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		for _, name := range names {
+			node, err := ntw.Node(name)
+			if err != nil {
+				gctx.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
+
+			nodes.Nodes = append(nodes.Nodes, node)
+		}
+
+		gctx.IndentedJSON(http.StatusOK, nodes)
+	})
+
 	router.GET("/", func(gctx *gin.Context) {
-		gctx.File(network.NodeFile(config.Name))
+		gctx.File(ntw.NodeFile(config.Name))
 	})
 
 	return router
+}
+
+type nodeList struct {
+	Nodes []*network.Node `json:"nodes"`
 }

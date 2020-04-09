@@ -2,6 +2,7 @@ package tincd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -131,6 +132,17 @@ func (peer *Peer) run(ctx context.Context) {
 		}
 	}
 	peer.Fetched = true
+	list, err := peer.fetchNodes(ctx)
+	if err != nil {
+		log.Println("failed get list of nodes from", peer.Node, ":", err)
+		return
+	}
+	for _, node := range list {
+		err = peer.network.Put(node)
+		if err != nil {
+			log.Println("failed save node", node.Name, "from", peer.Node, ":", err)
+		}
+	}
 }
 
 func (peer *Peer) fetchConfig(ctx context.Context) (*network.Node, error) {
@@ -156,4 +168,30 @@ func (peer *Peer) fetchConfig(ctx context.Context) (*network.Node, error) {
 
 	var node network.Node
 	return &node, node.Parse(data)
+}
+
+func (peer *Peer) fetchNodes(ctx context.Context) ([]*network.Node, error) {
+	addr := strings.TrimSpace(strings.Split(peer.Subnet, "/")[0])
+	url := "http://" + addr + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/nodes"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%d %s", res.StatusCode, res.Status)
+	}
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var nodes nodeList
+
+	return nodes.Nodes, json.Unmarshal(data, &nodes)
 }

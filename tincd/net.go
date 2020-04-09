@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 	"tinc-web-boot/network"
 	"tinc-web-boot/utils"
 )
@@ -132,6 +133,40 @@ func (impl *netImpl) run(global context.Context) error {
 		impl.peers.Run(ctx, peers)
 	}()
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer abort()
+		impl.queryActivePeers(ctx)
+	}()
+
 	wg.Wait()
 	return ctx.Err()
+}
+
+func (impl *netImpl) queryActivePeers(ctx context.Context) {
+	for {
+		for _, peer := range impl.peers.List() {
+			list, err := peer.fetchNodes(ctx)
+			if err != nil {
+				log.Println("failed to fetch list of nodes from", peer.Node, ":", err)
+				continue
+			}
+
+			for _, node := range list {
+				err = impl.Definition().Put(node)
+				if err != nil {
+					log.Println("failed to save node", node.Name, ":", err)
+					continue
+				}
+			}
+		}
+
+		select {
+		case <-time.After(nodesListInterval):
+		case <-ctx.Done():
+			return
+		}
+
+	}
 }

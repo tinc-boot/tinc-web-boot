@@ -15,7 +15,7 @@ Status: **draft**
 | in-progress | windows all-in-one build |
 | in-progress | linux packaging |
 | in-progress | freindly UI |
-| in-progress | nodes hosts synchornizations (with versions) |
+| done | nodes hosts synchornizations (with versions) |
 | planned | auto-start browser on double-click |
 | planned | server mode (no browser launch) |
 | planned | optional adminstrator authorization |

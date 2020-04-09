@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"tinc-web-boot/utils"
 )
 
@@ -52,6 +53,7 @@ func (st *Storage) WorkDir(network string) string {
 
 type Network struct {
 	Root string
+	lock sync.Mutex
 }
 
 func (network *Network) Name() string {
@@ -114,6 +116,17 @@ func (network *Network) Upgrade(upgrade Upgrade) error {
 }
 
 func (network *Network) Put(node *Node) error {
+	if !IsValidNodeName(node.Name) {
+		return fmt.Errorf("invalid node name")
+	}
+	if node.PublicKey == "" {
+		return fmt.Errorf("empty public key")
+	}
+	if node.Subnet == "" {
+		return fmt.Errorf("empty subnet")
+	}
+	network.lock.Lock()
+	defer network.lock.Unlock()
 	if n, err := network.Node(node.Name); err == nil && n.Version >= node.Version {
 		// no need to update - saved version is bigger or equal
 		return nil
@@ -324,4 +337,8 @@ var suffixRunes = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 func IsValidName(name string) bool {
 	return regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(name)
+}
+
+func IsValidNodeName(name string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(name)
 }
