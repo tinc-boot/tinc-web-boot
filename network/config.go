@@ -17,10 +17,17 @@ type Address struct {
 	Port uint16 `json:"port,omitempty"`
 }
 
+type Upgrade struct {
+	Subnet  string    `json:"subnet"`
+	Port    uint16    `json:"port"`
+	Address []Address `json:"address,omitempty"`
+}
+
 type Node struct {
 	Name      string    `json:"name"`
 	Subnet    string    `json:"subnet"`
 	Port      uint16    `json:"port"`
 	Address   []Address `json:"address,omitempty"`
 	PublicKey string    `json:"publicKey"`
+	Version   int       `json:"version"`
 }

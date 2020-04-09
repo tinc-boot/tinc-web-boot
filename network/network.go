@@ -97,7 +97,39 @@ func (network *Network) Node(name string) (*Node, error) {
 	return &nd, nd.Parse(data)
 }
 
+func (network *Network) Upgrade(upgrade Upgrade) error {
+	config, err := network.Read()
+	if err != nil {
+		return err
+	}
+	n, err := network.Node(config.Name)
+	if err != nil {
+		return err
+	}
+	n.Version = n.Version + 1
+	n.Address = upgrade.Address
+	n.Subnet = upgrade.Subnet
+	n.Port = upgrade.Port
+	return network.put(n)
+}
+
 func (network *Network) Put(node *Node) error {
+	if n, err := network.Node(node.Name); err == nil && n.Version >= node.Version {
+		// no need to update - saved version is bigger or equal
+		return nil
+	}
+	config, err := network.Read()
+	if err != nil {
+		return err
+	}
+	if config.Name == node.Name {
+		// do not touch self node host file
+		return nil
+	}
+	return network.put(node)
+}
+
+func (network *Network) put(node *Node) error {
 	data, err := node.Build()
 	if err != nil {
 		return err
@@ -221,13 +253,19 @@ func (network *Network) defineConfiguration() error {
 		return err
 	}
 
-	nodeConfig := &Node{
-		Name:   nodeName,
-		Subnet: subnet,
-		Port:   config.Port,
+	var version = 1
+	if n, err := network.Node(config.Name); err == nil {
+		version = n.Version + 1
 	}
 
-	return network.Put(nodeConfig)
+	nodeConfig := &Node{
+		Name:    nodeName,
+		Subnet:  subnet,
+		Port:    config.Port,
+		Version: version,
+	}
+
+	return network.put(nodeConfig)
 }
 
 func (network *Network) configFile() string {

@@ -58,9 +58,10 @@ func (a *Address) Parse(text []byte) error {
 
 func (n *Node) Build() (text []byte, err error) {
 	params := map[string][]interface{}{
-		"Name":   {n.Name},
-		"Subnet": {n.Subnet},
-		"Port":   {fmt.Sprint(n.Port)},
+		"Name":    {n.Name},
+		"Subnet":  {n.Subnet},
+		"Port":    {fmt.Sprint(n.Port)},
+		"Version": {fmt.Sprint(n.Version)},
 	}
 	for i := range n.Address {
 		params["Address"] = append(params["Address"], &n.Address[i])
@@ -84,6 +85,7 @@ func (n *Node) Parse(data []byte) error {
 		n.Address = append(n.Address, a)
 	}
 	n.Port = params.FirstUint16("Port")
+	n.Version = params.FirstInt("Version")
 	return nil
 }
 
@@ -111,6 +113,12 @@ func (mm *multiMap) FirstUint16(name string) uint16 {
 	v := mm.First(name, "0")
 	x, _ := strconv.ParseUint(v, 10, 16)
 	return uint16(x)
+}
+
+func (mm *multiMap) FirstInt(name string) int {
+	v := mm.First(name, "0")
+	x, _ := strconv.Atoi(v)
+	return x
 }
 
 func (mm *multiMap) FirstBool(name string) bool {
