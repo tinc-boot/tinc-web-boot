@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/browser"
 	"log"
 	"net/http"
 	"os"
@@ -40,10 +41,11 @@ type RemoveSubnet struct {
 }
 
 type Root struct {
-	TincBin string `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
-	Host    string `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
-	Dir     string `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
-	Dev     bool   `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
+	TincBin  string `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
+	Host     string `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
+	Dir      string `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
+	Dev      bool   `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
+	Headless bool   `long:"headless" env:"HEADLESS" description:"Disable launch browser"`
 	internal.HttpServer
 }
 
@@ -99,6 +101,28 @@ func (m *Root) Run() error {
 	}
 
 	webApi := web.New(pool, m.Dev)
+	if !m.Headless {
+		go func() {
+
+			for i := 0; i < 50; i++ {
+				if isGuiAvailable(ctx, m.Bind, time.Second) {
+					break
+				}
+				select {
+				case <-time.After(100 * time.Millisecond):
+				case <-ctx.Done():
+					return
+				}
+			}
+
+			err := browser.OpenURL(m.Bind)
+			if err != nil {
+				log.Println("failed to open UI:", err)
+			} else {
+				log.Println("UI opened")
+			}
+		}()
+	}
 
 	return m.Serve(ctx, webApi)
 }
@@ -212,4 +236,19 @@ func post(ctx context.Context, URL string, data interface{}) error {
 	}
 
 	return nil
+}
+
+func isGuiAvailable(global context.Context, url string, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(global, timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return false
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	res.Body.Close()
+	return true
 }

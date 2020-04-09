@@ -16,11 +16,11 @@ Status: **draft**
 | in-progress | linux packaging |
 | in-progress | freindly UI |
 | done | nodes hosts synchornizations (with versions) |
-| planned | auto-start browser on double-click |
+| done | auto-start browser on double-click |
 | planned | server mode (no browser launch) |
 | planned | optional adminstrator authorization |
 | planned | one-click sharing by URL |
-| planned | define an exit node |
+| in-progress | define an exit node |
 
 ## API
 
