@@ -47,4 +47,9 @@ type TincWeb interface {
 	Import(sharing Sharing) (*Network, error)
 	// Share network and generate configuration file.
 	Share(network string) (*Sharing, error)
+	// Node definition in network (aka - self node)
+	Node(network string) (*network.Node, error)
+	// Upgrade node parameters.
+	// In some cases requires restart
+	Upgrade(network string, update network.Upgrade) (*network.Node, error)
 }

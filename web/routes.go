@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
+	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
 	"tinc-web-boot/web/internal"
 	"tinc-web-boot/web/shared"
@@ -202,4 +203,28 @@ func (srv *api) Share(network string) (*shared.Sharing, error) {
 	}
 
 	return &ans, nil
+}
+
+func (srv *api) Upgrade(network string, update network.Upgrade) (*network.Node, error) {
+	ntw, err := srv.pool.Get(network)
+	if err != nil {
+		return nil, err
+	}
+	err = ntw.Definition().Upgrade(update)
+	if err != nil {
+		return nil, err
+	}
+	return srv.Node(network)
+}
+
+func (srv *api) Node(network string) (*network.Node, error) {
+	ntw, err := srv.pool.Get(network)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := ntw.Definition().Read()
+	if err != nil {
+		return nil, err
+	}
+	return ntw.Definition().Node(cfg.Name)
 }

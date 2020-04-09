@@ -13,6 +13,8 @@ Public Tinc-Web API (json-rpc 2.0)
 * [TincWeb.Peer](#tincwebpeer) - Peer detailed info by in the network
 * [TincWeb.Import](#tincwebimport) - Import another tinc-web network configuration file.
 * [TincWeb.Share](#tincwebshare) - Share network and generate configuration file.
+* [TincWeb.Node](#tincwebnode) - Node definition in network (aka - self node)
+* [TincWeb.Upgrade](#tincwebupgrade) - Upgrade node parameters.
 
 
 
@@ -322,3 +324,80 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | node | `[]*network.Node` |  |
+
+## TincWeb.Node
+
+Node definition in network (aka - self node)
+
+* Method: `TincWeb.Node`
+* Returns: `*network.Node`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | network | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWeb.Node",
+    "params" : []
+}
+EOF
+```
+### Node
+
+| Json | Type | Comment |
+|------|------|---------|
+| name | `string` |  |
+| subnet | `string` |  |
+| port | `uint16` |  |
+| address | `[]Address` |  |
+| publicKey | `string` |  |
+| version | `int` |  |
+
+## TincWeb.Upgrade
+
+Upgrade node parameters.
+In some cases requires restart
+
+* Method: `TincWeb.Upgrade`
+* Returns: `*network.Node`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | network | `string` |
+| 1 | update | `Upgrade` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWeb.Upgrade",
+    "params" : []
+}
+EOF
+```
+### Node
+
+| Json | Type | Comment |
+|------|------|---------|
+| name | `string` |  |
+| subnet | `string` |  |
+| port | `uint16` |  |
+| address | `[]Address` |  |
+| publicKey | `string` |  |
+| version | `int` |  |
+### Upgrade
+
+| Json | Type | Comment |
+|------|------|---------|
+| subnet | `string` |  |
+| port | `uint16` |  |
+| address | `[]Address` |  |

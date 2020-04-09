@@ -5,6 +5,7 @@ package internal
 import (
 	"encoding/json"
 	jsonrpc2 "github.com/reddec/jsonrpc2"
+	network "tinc-web-boot/network"
 	shared "tinc-web-boot/web/shared"
 )
 
@@ -158,5 +159,38 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		return wrap.Share(args.Arg0)
 	})
 
-	return []string{"TincWeb.Networks", "TincWeb.Network", "TincWeb.Create", "TincWeb.Remove", "TincWeb.Start", "TincWeb.Stop", "TincWeb.Peers", "TincWeb.Peer", "TincWeb.Import", "TincWeb.Share"}
+	router.RegisterFunc("TincWeb.Node", func(params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct {
+			Arg0 string `json:"network"`
+		}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		return wrap.Node(args.Arg0)
+	})
+
+	router.RegisterFunc("TincWeb.Upgrade", func(params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct {
+			Arg0 string          `json:"network"`
+			Arg1 network.Upgrade `json:"update"`
+		}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		return wrap.Upgrade(args.Arg0, args.Arg1)
+	})
+
+	return []string{"TincWeb.Networks", "TincWeb.Network", "TincWeb.Create", "TincWeb.Remove", "TincWeb.Start", "TincWeb.Stop", "TincWeb.Peers", "TincWeb.Peer", "TincWeb.Import", "TincWeb.Share", "TincWeb.Node", "TincWeb.Upgrade"}
 }

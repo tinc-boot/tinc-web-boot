@@ -56,6 +56,12 @@ export interface Sharing {
     node: Array<Node> | null
 }
 
+export interface Upgrade {
+    subnet: string
+    port: number
+    address: Array<Address> | null
+}
+
 
 /**
 Public Tinc-Web API (json-rpc 2.0)
@@ -196,6 +202,31 @@ Return created (or used) network with full configuration
             "id" : this.__next_id(),
             "params" : [network]
         })) as Sharing;
+    }
+
+    /**
+    Node definition in network (aka - self node)
+    **/
+    async node(network: string): Promise<Node> {
+        return (await this.__call('Node', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Node",
+            "id" : this.__next_id(),
+            "params" : [network]
+        })) as Node;
+    }
+
+    /**
+    Upgrade node parameters.
+In some cases requires restart
+    **/
+    async upgrade(network: string, update: Upgrade): Promise<Node> {
+        return (await this.__call('Upgrade', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Upgrade",
+            "id" : this.__next_id(),
+            "params" : [network, update]
+        })) as Node;
     }
 
 

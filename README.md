@@ -17,10 +17,10 @@ Status: **draft**
 | in-progress | freindly UI |
 | done | nodes hosts synchornizations (with versions) |
 | done | auto-start browser on double-click |
-| planned | server mode (no browser launch) |
+| in-progress | server mode (no browser launch) |
 | planned | optional adminstrator authorization |
-| planned | one-click sharing by URL |
-| in-progress | define an exit node |
+| in-progress | one-click sharing by URL |
+| planned | define an exit node |
 
 ## API
 
