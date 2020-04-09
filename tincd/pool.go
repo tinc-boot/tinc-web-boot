@@ -51,6 +51,9 @@ type Tincd struct {
 }
 
 func (pool *Tincd) Get(name string) (*netImpl, error) {
+	if !network.IsValidName(name) {
+		return nil, fmt.Errorf("invalid network name")
+	}
 	nw := pool.storage.Get(name)
 	if !nw.IsDefined() {
 		return nil, fmt.Errorf("network %s is not defined", name)
@@ -60,6 +63,9 @@ func (pool *Tincd) Get(name string) (*netImpl, error) {
 }
 
 func (pool *Tincd) Create(name string) (*netImpl, error) {
+	if !network.IsValidName(name) {
+		return nil, fmt.Errorf("invalid network name")
+	}
 	v, created := pool.ensure(pool.storage.Get(name))
 	if created {
 		return v, v.definition.Configure(pool.ctx, pool.tincBin)
@@ -68,6 +74,9 @@ func (pool *Tincd) Create(name string) (*netImpl, error) {
 }
 
 func (pool *Tincd) Remove(name string) (bool, error) {
+	if !network.IsValidName(name) {
+		return false, fmt.Errorf("invalid network name")
+	}
 	pool.lock.Lock()
 	defer pool.lock.Unlock()
 

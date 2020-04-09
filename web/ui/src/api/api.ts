@@ -50,7 +50,6 @@ export interface Address {
     port: number | null
 }
 
-
 /**
 Public Tinc-Web API (json-rpc 2.0)
 **/
@@ -168,12 +167,12 @@ export class TincWeb {
 
 
 
-    __next_id() {
+    private __next_id() {
         this.__id += 1;
         return this.__id
     }
 
-    async __call(method: string, req: object): Promise<any> {
+    private async __call(method: string, req: any): Promise<any> {
         const fetchParams = {
             method: "POST",
             headers: {
@@ -182,7 +181,7 @@ export class TincWeb {
             body: JSON.stringify(req)
         };
         if (this.__preflightHandler) {
-            await Promise.resolve(this.__preflightHandler(method, fetchParams));
+            await Promise.resolve(this.__preflightHandler(method, req, fetchParams));
         }
         const res = await fetch(this.__url, fetchParams);
         if (!res.ok) {

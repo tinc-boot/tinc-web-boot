@@ -111,6 +111,9 @@ func (network *Network) IsDefined() bool {
 }
 
 func (network *Network) Configure(ctx context.Context, tincBin string) error {
+	if !IsValidName(network.Name()) {
+		return fmt.Errorf("invalid network name")
+	}
 	if err := os.MkdirAll(network.hosts(), 0755); err != nil {
 		return err
 	}
@@ -280,3 +283,7 @@ func (network *Network) generateKeysIfNeeded(ctx context.Context, tincBin string
 }
 
 var suffixRunes = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+func IsValidName(name string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(name)
+}
