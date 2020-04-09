@@ -1,0 +1,390 @@
+{
+  "info": {
+    "_postman_id": "tinc-web-boot/web/shared@TincWeb",
+    "name": "TincWeb",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "# TincWeb\n\nPublic Tinc-Web API (json-rpc 2.0)"
+  },
+  "item": [
+    {
+      "name": "Networks",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Networks\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Networks\n\nList of available networks (briefly, without config)\n\n* Method: `TincWeb.Networks`\n* Returns: `[]*Network`\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+      }
+    },
+    {
+      "name": "Network",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Network\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Network\n\nDetailed network info\n\n* Method: `TincWeb.Network`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | name | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+      }
+    },
+    {
+      "name": "Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Create\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Create\n\nCreate new network if not exists\n\n* Method: `TincWeb.Create`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | name | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+      }
+    },
+    {
+      "name": "Remove",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Remove\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Remove\n\nRemove network (returns true if network existed)\n\n* Method: `TincWeb.Remove`\n* Returns: `bool`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n\n"
+      }
+    },
+    {
+      "name": "Start",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Start\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Start\n\nStart or re-start network\n\n* Method: `TincWeb.Start`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+      }
+    },
+    {
+      "name": "Stop",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Stop\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Stop\n\nStop network\n\n* Method: `TincWeb.Stop`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+      }
+    },
+    {
+      "name": "Peers",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Peers\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Peers\n\nPeers brief list in network  (briefly, without config)\n\n* Method: `TincWeb.Peers`\n* Returns: `[]*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| status | `*tincd.Peer` |  |\n| config | `*network.Node` |  |\n\n"
+      }
+    },
+    {
+      "name": "Peer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Peer\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Peer\n\nPeer detailed info by in the network\n\n* Method: `TincWeb.Peer`\n* Returns: `*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | name | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| status | `*tincd.Peer` |  |\n| config | `*network.Node` |  |\n\n"
+      }
+    },
+    {
+      "name": "Import",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Import\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Import\n\nImport another tinc-web network configuration file.\nIt means let nodes defined in config join to the network.\nReturn created (or used) network with full configuration\n\n* Method: `TincWeb.Import`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | sharing | `Sharing` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
+      }
+    },
+    {
+      "name": "Share",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Share\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api"
+          ]
+        },
+        "description": "# TincWeb.Share\n\nShare network and generate configuration file.\n\n* Method: `TincWeb.Share`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
+      }
+    }
+  ]
+}

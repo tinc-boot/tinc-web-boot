@@ -173,8 +173,9 @@ export class TincWeb {
     }
 
     /**
-    Import another tinc-web network configuration file
-It means let the nodes defined in config join to the network .
+    Import another tinc-web network configuration file.
+It means let nodes defined in config join to the network.
+Return created (or used) network with full configuration
     **/
     async import(sharing: Sharing): Promise<Network> {
         return (await this.__call('Import', {
@@ -186,7 +187,7 @@ It means let the nodes defined in config join to the network .
     }
 
     /**
-    Share network and generate configuration file
+    Share network and generate configuration file.
     **/
     async share(network: string): Promise<Sharing> {
         return (await this.__call('Share', {
