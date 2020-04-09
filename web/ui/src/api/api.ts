@@ -43,12 +43,19 @@ export interface Node {
     port: number
     address: Array<Address> | null
     publicKey: string
+    version: number
 }
 
 export interface Address {
     host: string
     port: number | null
 }
+
+export interface Sharing {
+    name: string
+    node: Array<Node> | null
+}
+
 
 /**
 Public Tinc-Web API (json-rpc 2.0)
@@ -165,6 +172,31 @@ export class TincWeb {
         })) as PeerInfo;
     }
 
+    /**
+    Import another tinc-web network configuration file
+It means let the nodes defined in config join to the network .
+    **/
+    async import(sharing: Sharing): Promise<Network> {
+        return (await this.__call('Import', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Import",
+            "id" : this.__next_id(),
+            "params" : [sharing]
+        })) as Network;
+    }
+
+    /**
+    Share network and generate configuration file
+    **/
+    async share(network: string): Promise<Sharing> {
+        return (await this.__call('Share', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Share",
+            "id" : this.__next_id(),
+            "params" : [network]
+        })) as Sharing;
+    }
+
 
 
     private __next_id() {
@@ -172,7 +204,7 @@ export class TincWeb {
         return this.__id
     }
 
-    private async __call(method: string, req: any): Promise<any> {
+    private async __call(method: string, req: object): Promise<any> {
         const fetchParams = {
             method: "POST",
             headers: {
@@ -181,7 +213,7 @@ export class TincWeb {
             body: JSON.stringify(req)
         };
         if (this.__preflightHandler) {
-            await Promise.resolve(this.__preflightHandler(method, req, fetchParams));
+            await Promise.resolve(this.__preflightHandler(method, fetchParams));
         }
         const res = await fetch(this.__url, fetchParams);
         if (!res.ok) {

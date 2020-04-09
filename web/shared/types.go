@@ -18,6 +18,11 @@ type PeerInfo struct {
 	Configuration *network.Node `json:"config,omitempty"`
 }
 
+type Sharing struct {
+	Name  string          `json:"name"`
+	Nodes []*network.Node `json:"node,omitempty"`
+}
+
 // Public Tinc-Web API (json-rpc 2.0)
 type TincWeb interface {
 	// List of available networks (briefly, without config)
@@ -36,4 +41,10 @@ type TincWeb interface {
 	Peers(network string) ([]*PeerInfo, error)
 	// Peer detailed info by in the network
 	Peer(network, name string) (*PeerInfo, error)
+	// Import another tinc-web network configuration file.
+	// It means let nodes defined in config join to the network.
+	// Return created (or used) network with full configuration
+	Import(sharing Sharing) (*Network, error)
+	// Share network and generate configuration file.
+	Share(network string) (*Sharing, error)
 }

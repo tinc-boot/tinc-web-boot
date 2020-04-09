@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
 	"tinc-web-boot/tincd"
@@ -153,4 +154,52 @@ func (srv *api) Stop(network string) (*shared.Network, error) {
 		Name:    ntw.Definition().Name(),
 		Running: ntw.IsRunning(),
 	}, nil
+}
+
+func (srv *api) Import(sharing shared.Sharing) (*shared.Network, error) {
+	ntw, err := srv.pool.Create(sharing.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := ntw.Definition().Read()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, node := range sharing.Nodes {
+		err := ntw.Definition().Put(node)
+		if err != nil {
+			return nil, fmt.Errorf("import node %s: %w", node.Name, err)
+		}
+	}
+
+	return &shared.Network{
+		Name:    ntw.Definition().Name(),
+		Running: ntw.IsRunning(),
+		Config:  config,
+	}, nil
+}
+
+func (srv *api) Share(network string) (*shared.Sharing, error) {
+	ntw, err := srv.pool.Get(network)
+	if err != nil {
+		return nil, err
+	}
+	nodeNames, err := ntw.Definition().Nodes()
+	if err != nil {
+		return nil, err
+	}
+	var ans shared.Sharing
+	ans.Name = network
+
+	for _, name := range nodeNames {
+		node, err := ntw.Definition().Node(name)
+		if err != nil {
+			return nil, fmt.Errorf("get node %s: %w", name, err)
+		}
+		ans.Nodes = append(ans.Nodes, node)
+	}
+
+	return &ans, nil
 }

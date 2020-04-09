@@ -11,6 +11,8 @@ Public Tinc-Web API (json-rpc 2.0)
 * [TincWeb.Stop](#tincwebstop) - Stop network
 * [TincWeb.Peers](#tincwebpeers) - Peers brief list in network  (briefly, without config)
 * [TincWeb.Peer](#tincwebpeer) - Peer detailed info by in the network
+* [TincWeb.Import](#tincwebimport) - Import another tinc-web network configuration file
+* [TincWeb.Share](#tincwebshare) - Share network and generate configuration file
 
 
 
@@ -251,3 +253,71 @@ EOF
 | online | `bool` |  |
 | status | `*tincd.Peer` |  |
 | config | `*network.Node` |  |
+
+## TincWeb.Import
+
+Import another tinc-web network configuration file
+It means let the nodes defined in config join to the network .
+
+* Method: `TincWeb.Import`
+* Returns: `*Network`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | sharing | `Sharing` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWeb.Import",
+    "params" : []
+}
+EOF
+```
+### Network
+
+| Json | Type | Comment |
+|------|------|---------|
+| name | `string` |  |
+| running | `bool` |  |
+| config | `*network.Config` |  |
+### Sharing
+
+| Json | Type | Comment |
+|------|------|---------|
+| name | `string` |  |
+| node | `[]*network.Node` |  |
+
+## TincWeb.Share
+
+Share network and generate configuration file
+
+* Method: `TincWeb.Share`
+* Returns: `*Sharing`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | network | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWeb.Share",
+    "params" : []
+}
+EOF
+```
+### Sharing
+
+| Json | Type | Comment |
+|------|------|---------|
+| name | `string` |  |
+| node | `[]*network.Node` |  |
