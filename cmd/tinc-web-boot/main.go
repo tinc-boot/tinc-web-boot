@@ -88,9 +88,14 @@ func (m *Root) Run() error {
 	}
 	defer pool.Stop()
 
-	_, err = pool.Create("test")
-	if err != nil {
-		return err
+	if m.Dev {
+		ntw, err := pool.Create("example-network")
+		if err != nil {
+			return err
+		}
+		if !ntw.IsRunning() {
+			ntw.Start()
+		}
 	}
 
 	webApi := web.New(pool, m.Dev)
