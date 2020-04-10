@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
+	"net/http"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
 	"tinc-web-boot/web/internal"
 	"tinc-web-boot/web/shared"
 )
 
+//go:generate go-bindata -pkg web -prefix ui/dist/ -fs ui/dist/
 func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 
 	router := gin.Default()
@@ -41,6 +43,10 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
 
 	router.POST("/api", gin.WrapH(jsonrpc2.Handler(&jsonRouter)))
+	router.StaticFS("/static", AssetFile())
+	router.GET("/", func(gctx *gin.Context) {
+		gctx.Redirect(http.StatusTemporaryRedirect, "/static")
+	})
 
 	return router
 }

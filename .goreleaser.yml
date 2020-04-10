@@ -1,0 +1,96 @@
+project_name: tinc-web-boot
+before:
+  hooks:
+    - make tools
+    - true # add here UI generator
+    - go generate web/routes.go
+builds:
+- main: ./cmd/tinc-web-boot/main.go
+  id: posix-build
+  binary: tinc-web-boot
+  env:
+  - CGO_ENABLED=0
+  goarch:
+    - amd64
+    - arm
+    - arm64
+  goarm:
+    - 5
+    - 6
+    - 7
+  goos:
+    - linux
+    - darwin
+  flags:
+    - -trimpath
+- main: ./cmd/tinc-web-boot/main.go
+  id: windows-build
+  binary: tinc-web-boot
+  env:
+    - CGO_ENABLED=0
+  goarch:
+    - amd64
+  goos:
+    - windows
+  flags:
+    - -trimpath
+
+nfpms:
+  - id: debian
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    replacements:
+      Linux: linux
+      386: i386
+    homepage: https://github.com/reddec/tinc-web-boot
+    maintainer: Baryshnikov Aleksandr <owner@reddec.net>
+    description: Web desktop tinc control panel and management
+    license: Mozilla Public License Version 2.0
+    formats:
+      - deb
+    dependencies:
+      - tinc
+
+uploads:
+  - name: bintray
+    method: PUT
+    mode: archive
+    username: reddec
+    custom_artifact_name: true
+    ids:
+      - debian
+    target: 'https://api.bintray.com/content/reddec/debian/{{ .ProjectName }}/{{ .Version }}/{{ .ArtifactName }};publish=1;deb_component=main;deb_distribution=all;deb_architecture={{ .Arch }}'
+
+archives:
+- replacements:
+    Linux: linux
+    386: i386
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  id: posix-archive
+  builds:
+    - posix-build
+  files:
+    - LICENSE
+    - README.md
+  format: tar.gz
+- name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  id: windows-archive
+  builds:
+    - windows-build
+  files:
+    - LICENSE
+    - README.md
+    - assets/windows/**/**
+  format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^doc:'
+      - '^test:'
+      - '^build:'
