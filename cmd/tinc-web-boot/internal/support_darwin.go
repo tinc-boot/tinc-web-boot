@@ -20,7 +20,7 @@ func DetectTincBinary(possibleBinary string) (string, error) {
 			return err
 		}
 		if info.Name() == "tincd" && !info.IsDir() {
-			possibleBinary = filepath.Join(path, info.Name())
+			possibleBinary = path
 			return os.ErrExist
 		}
 		return nil

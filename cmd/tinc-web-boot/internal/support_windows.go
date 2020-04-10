@@ -32,7 +32,7 @@ func digAround(dir string) string {
 			return nil
 		}
 		if info.Name() == "tincd.exe" {
-			ans = filepath.Join(path, info.Name())
+			ans = path
 			return os.ErrExist
 		}
 		return nil
