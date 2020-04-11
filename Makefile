@@ -9,3 +9,4 @@ ui:
 
 regen:
 	go generate web/internal/*.go
+	go generate network/event_types.go

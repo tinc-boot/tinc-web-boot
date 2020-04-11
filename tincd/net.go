@@ -16,10 +16,11 @@ type netImpl struct {
 	tincBin string
 	ctx     context.Context
 
-	done  chan struct{}
-	stop  func()
-	lock  sync.Mutex
-	peers peersManager
+	done   chan struct{}
+	stop   func()
+	lock   sync.Mutex
+	peers  peersManager
+	events *network.Events
 
 	definition *network.Network
 }
@@ -39,6 +40,7 @@ func (impl *netImpl) Start() {
 	go func() {
 		defer cancel()
 		defer close(done)
+		defer impl.events.Stopped.Emit(network.NetworkID{Name: impl.definition.Name()})
 		err := impl.run(ctx)
 		if err != nil {
 			log.Println("failed run network", impl.definition.Name(), ":", err)
@@ -139,7 +141,7 @@ func (impl *netImpl) run(global context.Context) error {
 		defer abort()
 		impl.queryActivePeers(ctx)
 	}()
-
+	impl.events.Started.Emit(network.NetworkID{Name: impl.definition.Name()})
 	wg.Wait()
 	return ctx.Err()
 }

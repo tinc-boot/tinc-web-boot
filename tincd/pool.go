@@ -47,7 +47,13 @@ type Tincd struct {
 	ctx  context.Context
 	nets map[string]*netImpl
 
+	events network.Events
+
 	storage *network.Storage
+}
+
+func (pool *Tincd) Events() *network.Events {
+	return &pool.events
 }
 
 func (pool *Tincd) Get(name string) (*netImpl, error) {
@@ -131,6 +137,7 @@ func (pool *Tincd) ensure(netw *network.Network) (*netImpl, bool) {
 		ctx:        pool.ctx,
 		definition: netw,
 		tincBin:    pool.tincBin,
+		events:     &pool.events,
 	}
 	pool.nets[netw.Name()] = v
 	return v, true

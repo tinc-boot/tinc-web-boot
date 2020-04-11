@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
+	"github.com/reddec/struct-view/support/events"
 	"net/http"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
@@ -44,8 +45,12 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 	var jsonRouter jsonrpc2.Router
 	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
 
+	streamer := events.NewWebsocketStream()
+	pool.Events().Sink(streamer.Feed)
+
 	router.POST("/api", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
 	router.GET("/api", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
+	router.GET("/api/events", gin.WrapH(streamer))
 	router.StaticFS("/static", AssetFile())
 	router.GET("/", func(gctx *gin.Context) {
 		gctx.Redirect(http.StatusTemporaryRedirect, "/static")
