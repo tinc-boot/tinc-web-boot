@@ -7,3 +7,12 @@ package network
 type NetworkID struct {
 	Name string `json:"name"`
 }
+
+//event:"PeerDiscovered"
+//event:"PeerJoined"
+//event:"PeerLeft"
+type PeerID struct {
+	Network string `json:"network"`
+	Node    string `json:"node"`
+	Subnet  string `json:"subnet,omitempty"`
+}

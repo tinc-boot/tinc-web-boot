@@ -36,6 +36,7 @@ func (impl *netImpl) Start() {
 	impl.done = done
 	impl.peers = peersManager{
 		network: impl.definition,
+		events:  impl.events,
 	}
 	go func() {
 		defer cancel()

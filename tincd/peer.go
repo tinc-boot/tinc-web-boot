@@ -23,6 +23,7 @@ type peerReq struct {
 
 type peersManager struct {
 	lock    sync.RWMutex
+	events  *network.Events
 	network *network.Network
 	list    map[string]*Peer
 }
@@ -40,11 +41,25 @@ LOOP:
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
+					pl.events.PeerDiscovered.Emit(network.PeerID{
+						Network: pl.network.Name(),
+						Node:    req.Node,
+						Subnet:  req.Subnet,
+					})
 					peer.run(ctx)
+					pl.events.PeerJoined.Emit(network.PeerID{
+						Network: pl.network.Name(),
+						Node:    req.Node,
+						Subnet:  req.Subnet,
+					})
 				}()
 			} else {
 				pl.Remove(req.Node)
-
+				pl.events.PeerLeft.Emit(network.PeerID{
+					Network: pl.network.Name(),
+					Node:    req.Node,
+					Subnet:  req.Subnet,
+				})
 			}
 		}
 	}
