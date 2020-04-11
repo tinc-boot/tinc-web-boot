@@ -28,6 +28,8 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 				return
 			}
 
+			gctx.Request.Header.Del("Origin")
+
 			gctx.Next()
 		})
 	} else {
@@ -42,7 +44,8 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 	var jsonRouter jsonrpc2.Router
 	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
 
-	router.POST("/api", gin.WrapH(jsonrpc2.Handler(&jsonRouter)))
+	router.POST("/api", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
+	router.GET("/api", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
 	router.StaticFS("/static", AssetFile())
 	router.GET("/", func(gctx *gin.Context) {
 		gctx.Redirect(http.StatusTemporaryRedirect, "/static")

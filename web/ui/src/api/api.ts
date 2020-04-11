@@ -63,22 +63,163 @@ export interface Upgrade {
 }
 
 
+// support stuff
+
+
+interface rpcExecutor {
+    call(id: number, payload: string): Promise<object>;
+}
+
+class wsExecutor {
+    private socket?: WebSocket;
+    private connecting = false;
+    private readonly pendingConnection: Array<() => (void)> = [];
+    private readonly correlation = new Map<number, [(data: object) => void, (err: object) => void]>();
+
+    constructor(private readonly url: string) {
+    }
+
+    async call(id: number, payload: string): Promise<object> {
+        const conn = await this.connectIfNeeded();
+        if (this.correlation.has(id)) {
+            throw new Error(`already exists pending request with id ${id}`);
+        }
+        let future = new Promise<object>((resolve, reject) => {
+            this.correlation.set(id, [resolve, reject]);
+        });
+        conn.send(payload);
+        return (await future);
+    }
+
+    private async connectIfNeeded(): Promise<WebSocket> {
+        while (this.connecting) {
+            await new Promise((resolve => {
+                this.pendingConnection.push(resolve);
+            }))
+        }
+        if (this.socket) {
+            return this.socket;
+        }
+        this.connecting = true;
+        let socket;
+        try {
+            socket = await this.connect();
+        } finally {
+            this.connecting = false;
+        }
+        socket.onerror = () => {
+            this.onConnectionFailed();
+        }
+        socket.onclose = () => {
+            this.onConnectionFailed();
+        }
+        socket.onmessage = ({data}) => {
+            let res;
+            try {
+                res = JSON.parse(data);
+            } catch (e) {
+                console.error("failed parse request:", e);
+            }
+            const task = this.correlation.get(res.id);
+            if (task) {
+                this.correlation.delete(res.id);
+                task[0](res);
+            }
+        }
+        this.socket = socket;
+
+        let cp = this.pendingConnection;
+        this.pendingConnection.slice(0, 0);
+        cp.forEach((f) => f());
+        return this.socket;
+    }
+
+    private connect(): Promise<WebSocket> {
+        return new Promise<WebSocket>(((resolve, reject) => {
+            let socket = new WebSocket(this.url);
+            let resolved = false;
+            socket.onopen = () => {
+                resolved = true;
+                resolve(socket);
+            }
+
+            socket.onerror = (e) => {
+                if (!resolved) {
+                    reject(e);
+                    resolved = true;
+                }
+            }
+
+            socket.onclose = (e) => {
+                if (!resolved) {
+                    reject(e);
+                    resolved = true;
+                }
+            }
+        }));
+    }
+
+    private onConnectionFailed() {
+        let sock = this.socket;
+        this.socket = undefined;
+        if (sock) {
+            sock.close();
+        }
+        const cp = Array.from(this.correlation.values());
+        this.correlation.clear();
+        const err = new Error('connection closed');
+        cp.forEach((([_, reject]) => {
+            reject(err);
+        }))
+    }
+}
+
+class postExecutor {
+    constructor(private readonly url: string) {
+    }
+
+    async call(id: number, payload: string): Promise<object> {
+        const fetchParams = {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: payload
+        };
+        const res = await fetch(this.url, fetchParams);
+        if (!res.ok) {
+            throw new Error(res.status + ' ' + res.statusText);
+        }
+        return await res.json();
+    }
+}
+
 /**
 Public Tinc-Web API (json-rpc 2.0)
 **/
 export class TincWeb {
 
     private __id: number;
-    private readonly __url: string;
-    private readonly __preflightHandler: any;
+    private __executor:rpcExecutor;
 
 
     // Create new API handler to TincWeb.
-    // preflightHandler (if defined) can return promise
-    constructor(base_url : string = 'http://127.0.0.1:8686/api', preflightHandler = null) {
-        this.__url = base_url;
+    constructor(base_url : string = 'ws://127.0.0.1:8686/api') {
+        const proto = (new URL(base_url)).protocol;
+        switch (proto) {
+            case "ws:":
+            case "wss:":{
+                this.__executor=new wsExecutor(base_url);
+                break
+            }
+            case "http:":
+            case "https:":
+            default:{
+                this.__executor = new postExecutor(base_url);
+                break
+            }
+        }
         this.__id = 1;
-        this.__preflightHandler = preflightHandler;
     }
 
 
@@ -86,7 +227,7 @@ export class TincWeb {
     List of available networks (briefly, without config)
     **/
     async networks(): Promise<Array<Network>> {
-        return (await this.__call('Networks', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Networks",
             "id" : this.__next_id(),
@@ -98,7 +239,7 @@ export class TincWeb {
     Detailed network info
     **/
     async network(name: string): Promise<Network> {
-        return (await this.__call('Network', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Network",
             "id" : this.__next_id(),
@@ -110,7 +251,7 @@ export class TincWeb {
     Create new network if not exists
     **/
     async create(name: string): Promise<Network> {
-        return (await this.__call('Create', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Create",
             "id" : this.__next_id(),
@@ -122,7 +263,7 @@ export class TincWeb {
     Remove network (returns true if network existed)
     **/
     async remove(network: string): Promise<boolean> {
-        return (await this.__call('Remove', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Remove",
             "id" : this.__next_id(),
@@ -134,7 +275,7 @@ export class TincWeb {
     Start or re-start network
     **/
     async start(network: string): Promise<Network> {
-        return (await this.__call('Start', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Start",
             "id" : this.__next_id(),
@@ -146,7 +287,7 @@ export class TincWeb {
     Stop network
     **/
     async stop(network: string): Promise<Network> {
-        return (await this.__call('Stop', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Stop",
             "id" : this.__next_id(),
@@ -158,7 +299,7 @@ export class TincWeb {
     Peers brief list in network  (briefly, without config)
     **/
     async peers(network: string): Promise<Array<PeerInfo>> {
-        return (await this.__call('Peers', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Peers",
             "id" : this.__next_id(),
@@ -170,7 +311,7 @@ export class TincWeb {
     Peer detailed info by in the network
     **/
     async peer(network: string, name: string): Promise<PeerInfo> {
-        return (await this.__call('Peer', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Peer",
             "id" : this.__next_id(),
@@ -184,7 +325,7 @@ It means let nodes defined in config join to the network.
 Return created (or used) network with full configuration
     **/
     async import(sharing: Sharing): Promise<Network> {
-        return (await this.__call('Import', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Import",
             "id" : this.__next_id(),
@@ -196,7 +337,7 @@ Return created (or used) network with full configuration
     Share network and generate configuration file.
     **/
     async share(network: string): Promise<Sharing> {
-        return (await this.__call('Share', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Share",
             "id" : this.__next_id(),
@@ -208,7 +349,7 @@ Return created (or used) network with full configuration
     Node definition in network (aka - self node)
     **/
     async node(network: string): Promise<Node> {
-        return (await this.__call('Node', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Node",
             "id" : this.__next_id(),
@@ -221,7 +362,7 @@ Return created (or used) network with full configuration
 In some cases requires restart
     **/
     async upgrade(network: string, update: Upgrade): Promise<Node> {
-        return (await this.__call('Upgrade', {
+        return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Upgrade",
             "id" : this.__next_id(),
@@ -230,31 +371,22 @@ In some cases requires restart
     }
 
 
-
     private __next_id() {
         this.__id += 1;
         return this.__id
     }
 
-    private async __call(method: string, req: object): Promise<any> {
-        const fetchParams = {
-            method: "POST",
-            headers: {
-                'Content-Type' : 'application/json',
+    private async __call(req: { id: number, jsonrpc: string, method: string, params: object | Array<any> }): Promise<any> {
+        const data = await this.__executor.call(req.id, JSON.stringify(req)) as {
+            error?: {
+                message: string,
+                code: number,
+                data?: any
             },
-            body: JSON.stringify(req)
-        };
-        if (this.__preflightHandler) {
-            await Promise.resolve(this.__preflightHandler(method, fetchParams));
-        }
-        const res = await fetch(this.__url, fetchParams);
-        if (!res.ok) {
-            throw new Error(res.status + ' ' + res.statusText);
+            result?:any
         }
 
-        const data = await res.json();
-
-        if ('error' in data) {
+        if (data.error) {
             throw new TincWebError(data.error.message, data.error.code, data.error.data);
         }
 
