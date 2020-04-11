@@ -2,7 +2,7 @@ project_name: tinc-web-boot
 before:
   hooks:
     - make tools
-    - true # add here UI generator
+    - make ui
     - go generate web/routes.go
 builds:
 - main: ./cmd/tinc-web-boot/main.go
