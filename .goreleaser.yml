@@ -1,9 +1,7 @@
 project_name: tinc-web-boot
 before:
   hooks:
-    - make tools
-    - make ui
-    - go generate web/routes.go
+    - make regen
 builds:
 - main: ./cmd/tinc-web-boot/main.go
   id: posix-build

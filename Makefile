@@ -3,8 +3,6 @@ install: backend
 tools:
 	GO111MODULE=off go get -u -v github.com/go-bindata/go-bindata/...
 	GO111MODULE=off go get -u -v github.com/reddec/struct-view/cmd/events-gen
-
-dev-tools: tools
 	GO111MODULE=off go get -u -v github.com/reddec/jsonrpc2/cmd/...
 
 ui:
