@@ -17,7 +17,7 @@ export type EventPayload = EventTypes.NetworkID | EventTypes.PeerID;
 export type EventHandler = ((payload: EventPayload, event: EventName) => (void)) | ((payload: EventPayload) => (void))
 
 export class Events {
-    private stopped = true;
+    private stopped = false;
     private readonly listeners = new Map<EventName, EventHandler>();
 
     constructor(private readonly url: string, private readonly reconnectInterval: number = 1000) {
