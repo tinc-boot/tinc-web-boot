@@ -93,7 +93,7 @@ export class Events {
         }
         socket.onmessage = ({data}) => {
             const {event, payload} = JSON.parse(data) as { event: string, payload: any };
-            const handler = this.listeners[event];
+            const handler = this.listeners.get(event as EventName);
             if (handler) {
                 try{
                     handler(payload);
