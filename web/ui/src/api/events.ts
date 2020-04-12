@@ -1,19 +1,17 @@
-namespace EventTypes {
-    
-    export interface NetworkID {
-        name: string
-    }
-    
-    export interface PeerID {
-        network: string
-        node: string
-        subnet: string | null
-    }
-    
+
+export interface NetworkID {
+    name: string
 }
 
+export interface PeerID {
+    network: string
+    node: string
+    subnet: string | null
+}
+
+
 export type EventName = 'Started' | 'Stopped' | 'PeerDiscovered' | 'PeerJoined' | 'PeerLeft';
-export type EventPayload = EventTypes.NetworkID | EventTypes.PeerID;
+export type EventPayload = NetworkID | PeerID;
 export type EventHandler = ((payload: EventPayload, event: EventName) => (void)) | ((payload: EventPayload) => (void))
 
 export class Events {
@@ -33,47 +31,47 @@ export class Events {
     }
 
 
-    onStarted(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
+    onStarted(handler: ((payload: NetworkID) => (void)) | ((payload: NetworkID, event: EventName) => (void))) {
         this.listeners.set('Started', handler as EventHandler);
     }
 
-    offStarted(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
+    offStarted(handler: ((payload: NetworkID) => (void)) | ((payload: NetworkID, event: EventName) => (void))) {
         this.listeners.delete('Started');
     }
 
 
-    onStopped(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
+    onStopped(handler: ((payload: NetworkID) => (void)) | ((payload: NetworkID, event: EventName) => (void))) {
         this.listeners.set('Stopped', handler as EventHandler);
     }
 
-    offStopped(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
+    offStopped(handler: ((payload: NetworkID) => (void)) | ((payload: NetworkID, event: EventName) => (void))) {
         this.listeners.delete('Stopped');
     }
 
 
-    onPeerDiscovered(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+    onPeerDiscovered(handler: ((payload: PeerID) => (void)) | ((payload: PeerID, event: EventName) => (void))) {
         this.listeners.set('PeerDiscovered', handler as EventHandler);
     }
 
-    offPeerDiscovered(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+    offPeerDiscovered(handler: ((payload: PeerID) => (void)) | ((payload: PeerID, event: EventName) => (void))) {
         this.listeners.delete('PeerDiscovered');
     }
 
 
-    onPeerJoined(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+    onPeerJoined(handler: ((payload: PeerID) => (void)) | ((payload: PeerID, event: EventName) => (void))) {
         this.listeners.set('PeerJoined', handler as EventHandler);
     }
 
-    offPeerJoined(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+    offPeerJoined(handler: ((payload: PeerID) => (void)) | ((payload: PeerID, event: EventName) => (void))) {
         this.listeners.delete('PeerJoined');
     }
 
 
-    onPeerLeft(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+    onPeerLeft(handler: ((payload: PeerID) => (void)) | ((payload: PeerID, event: EventName) => (void))) {
         this.listeners.set('PeerLeft', handler as EventHandler);
     }
 
-    offPeerLeft(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+    offPeerLeft(handler: ((payload: PeerID) => (void)) | ((payload: PeerID, event: EventName) => (void))) {
         this.listeners.delete('PeerLeft');
     }
 
