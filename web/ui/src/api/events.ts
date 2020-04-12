@@ -88,7 +88,7 @@ export class Events {
         socket.onclose = () => {
             if (!restarted) {
                 restarted = true;
-                setInterval(() => this.start(), this.reconnectInterval);
+                setTimeout(() => this.start(), this.reconnectInterval);
             }
         }
         socket.onerror = (e) => {
@@ -96,7 +96,7 @@ export class Events {
             if (!restarted) {
                 restarted = true;
                 socket.close();
-                setInterval(() => this.start(), this.reconnectInterval);
+                setTimeout(() => this.start(), this.reconnectInterval);
             }
         }
         socket.onmessage = ({data}) => {
