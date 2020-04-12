@@ -41,7 +41,7 @@ nfpms:
     replacements:
       Linux: linux
       386: i386
-    homepage: https://github.com/reddec/tinc-web-boot
+    homepage: https://github.com/tinc-boot/tinc-web-boot
     maintainer: Baryshnikov Aleksandr <owner@reddec.net>
     description: Web desktop tinc control panel and management
     license: Mozilla Public License Version 2.0
@@ -49,16 +49,6 @@ nfpms:
       - deb
     dependencies:
       - tinc
-
-uploads:
-  - name: bintray
-    method: PUT
-    mode: archive
-    username: reddec
-    custom_artifact_name: true
-    ids:
-      - debian
-    target: 'https://api.bintray.com/content/reddec/debian/{{ .ProjectName }}/{{ .Version }}/{{ .ArtifactName }};publish=1;deb_component=main;deb_distribution=all;deb_architecture={{ .Arch }}'
 
 archives:
 - replacements:
