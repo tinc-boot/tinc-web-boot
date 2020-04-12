@@ -12,7 +12,7 @@ import (
 	"tinc-web-boot/web/shared"
 )
 
-//go:generate go-bindata -pkg web -prefix ui/build/... -fs ui/build/
+//go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
 func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 
 	router := gin.Default()
