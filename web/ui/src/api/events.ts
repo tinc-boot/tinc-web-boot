@@ -13,57 +13,67 @@ namespace EventTypes {
 }
 
 export type EventName = 'Started' | 'Stopped' | 'PeerDiscovered' | 'PeerJoined' | 'PeerLeft';
+export type EventPayload = EventTypes.NetworkID | EventTypes.PeerID;
+export type EventHandler = ((payload: EventPayload, event: EventName) => (void)) | ((payload: EventPayload) => (void))
 
 export class Events {
     private stopped = true;
-    private readonly listeners = new Map<EventName, (payload: any) => (void)>();
+    private readonly listeners = new Map<EventName, EventHandler>();
 
     constructor(private readonly url: string, private readonly reconnectInterval: number = 1000) {
         this.start();
     }
 
-
-    onStarted(handler: (payload: EventTypes.NetworkID) => (void)) {
-        this.listeners.set('Started', handler);
+    on(event: EventName, handler: EventHandler) {
+        this.listeners.set(event, handler)
     }
 
-    offStarted(handler: (payload: EventTypes.NetworkID) => (void)) {
+    off(event: EventName, handler: EventHandler) {
+        this.listeners.delete(event)
+    }
+
+
+    onStarted(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
+        this.listeners.set('Started', handler as EventHandler);
+    }
+
+    offStarted(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
         this.listeners.delete('Started');
     }
 
 
-    onStopped(handler: (payload: EventTypes.NetworkID) => (void)) {
-        this.listeners.set('Stopped', handler);
+    onStopped(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
+        this.listeners.set('Stopped', handler as EventHandler);
     }
 
-    offStopped(handler: (payload: EventTypes.NetworkID) => (void)) {
+    offStopped(handler: ((payload: EventTypes.NetworkID) => (void)) | ((payload: EventTypes.NetworkID, event: EventName) => (void))) {
         this.listeners.delete('Stopped');
     }
 
 
-    onPeerDiscovered(handler: (payload: EventTypes.PeerID) => (void)) {
-        this.listeners.set('PeerDiscovered', handler);
+    onPeerDiscovered(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+        this.listeners.set('PeerDiscovered', handler as EventHandler);
     }
 
-    offPeerDiscovered(handler: (payload: EventTypes.PeerID) => (void)) {
+    offPeerDiscovered(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
         this.listeners.delete('PeerDiscovered');
     }
 
 
-    onPeerJoined(handler: (payload: EventTypes.PeerID) => (void)) {
-        this.listeners.set('PeerJoined', handler);
+    onPeerJoined(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+        this.listeners.set('PeerJoined', handler as EventHandler);
     }
 
-    offPeerJoined(handler: (payload: EventTypes.PeerID) => (void)) {
+    offPeerJoined(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
         this.listeners.delete('PeerJoined');
     }
 
 
-    onPeerLeft(handler: (payload: EventTypes.PeerID) => (void)) {
-        this.listeners.set('PeerLeft', handler);
+    onPeerLeft(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
+        this.listeners.set('PeerLeft', handler as EventHandler);
     }
 
-    offPeerLeft(handler: (payload: EventTypes.PeerID) => (void)) {
+    offPeerLeft(handler: ((payload: EventTypes.PeerID) => (void)) | ((payload: EventTypes.PeerID, event: EventName) => (void))) {
         this.listeners.delete('PeerLeft');
     }
 
@@ -96,7 +106,7 @@ export class Events {
             const handler = this.listeners.get(event as EventName);
             if (handler) {
                 try{
-                    handler(payload);
+                    handler(payload, event as EventName);
                 } catch(e) {
                     console.error(`failed to process handler for event ${event}:`, e);
                 }
