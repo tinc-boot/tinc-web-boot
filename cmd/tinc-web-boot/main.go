@@ -115,7 +115,7 @@ func (m *Root) Run() error {
 				}
 			}
 
-			err := browser.OpenURL(m.Bind)
+			err := browser.OpenURL("http://" + m.Bind)
 			if err != nil {
 				log.Println("failed to open UI:", err)
 			} else {
