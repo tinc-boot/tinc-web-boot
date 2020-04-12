@@ -4,3 +4,4 @@ dist
 test-data
 /main
 /networks
+node_modules
