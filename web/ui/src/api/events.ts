@@ -12,9 +12,11 @@ namespace EventTypes {
     
 }
 
+export type EventName = 'Started' | 'Stopped' | 'PeerDiscovered' | 'PeerJoined' | 'PeerLeft';
+
 export class Events {
     private stopped = true;
-    private readonly listeners = new Map<string, (payload: any) => (void)>();
+    private readonly listeners = new Map<EventName, (payload: any) => (void)>();
 
     constructor(private readonly url: string, private readonly reconnectInterval: number = 1000) {
         this.start();
@@ -22,7 +24,7 @@ export class Events {
 
 
     onStarted(handler: (payload: EventTypes.NetworkID) => (void)) {
-        this.listeners['Started'] = handler;
+        this.listeners.set('Started', handler);
     }
 
     offStarted(handler: (payload: EventTypes.NetworkID) => (void)) {
@@ -31,7 +33,7 @@ export class Events {
 
 
     onStopped(handler: (payload: EventTypes.NetworkID) => (void)) {
-        this.listeners['Stopped'] = handler;
+        this.listeners.set('Stopped', handler);
     }
 
     offStopped(handler: (payload: EventTypes.NetworkID) => (void)) {
@@ -40,7 +42,7 @@ export class Events {
 
 
     onPeerDiscovered(handler: (payload: EventTypes.PeerID) => (void)) {
-        this.listeners['PeerDiscovered'] = handler;
+        this.listeners.set('PeerDiscovered', handler);
     }
 
     offPeerDiscovered(handler: (payload: EventTypes.PeerID) => (void)) {
@@ -49,7 +51,7 @@ export class Events {
 
 
     onPeerJoined(handler: (payload: EventTypes.PeerID) => (void)) {
-        this.listeners['PeerJoined'] = handler;
+        this.listeners.set('PeerJoined', handler);
     }
 
     offPeerJoined(handler: (payload: EventTypes.PeerID) => (void)) {
@@ -58,7 +60,7 @@ export class Events {
 
 
     onPeerLeft(handler: (payload: EventTypes.PeerID) => (void)) {
-        this.listeners['PeerLeft'] = handler;
+        this.listeners.set('PeerLeft', handler);
     }
 
     offPeerLeft(handler: (payload: EventTypes.PeerID) => (void)) {
