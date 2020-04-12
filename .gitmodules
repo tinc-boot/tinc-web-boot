@@ -1,0 +1,3 @@
+[submodule "web/ui"]
+	path = web/ui
+	url = git@github.com:tinc-boot/tinc-web-boot-ui.git
