@@ -21,9 +21,12 @@ import (
 	"tinc-web-boot/web"
 )
 
+var version = "dev"
+
 type Main struct {
-	Run    Root   `cmd:"run" default:"1"`
-	Subnet Subnet `cmd:"subnet"`
+	Run     Root             `cmd:"run" default:"1"`
+	Subnet  Subnet           `cmd:"subnet"`
+	Version kong.VersionFlag `name:"version" help:"print version and exit"`
 }
 
 type Subnet struct {
@@ -51,7 +54,7 @@ type Root struct {
 
 func main() {
 	var cli Main
-	ctx := kong.Parse(&cli)
+	ctx := kong.Parse(&cli, kong.Vars{"version": version})
 	err := ctx.Run(nil)
 	ctx.FatalIfErrorf(err)
 }
