@@ -9,9 +9,9 @@ ui:
 	cd web/ui && npm i && npm run build
 
 regen: tools ui
-	PATH="$(PATH):$(GOPATH)/bin" go generate web/routes.go
-	PATH="$(PATH):$(GOPATH)/bin" go generate web/internal/*.go
-	PATH="$(PATH):$(GOPATH)/bin" go generate network/event_types.go
+	PATH="$(PATH):$(shell go env GOPATH)/bin" go generate web/routes.go
+	PATH="$(PATH):$(shell go env GOPATH)/bin" go generate web/internal/*.go
+	PATH="$(PATH):$(shell go env GOPATH)/bin" go generate network/event_types.go
 
 backend: regen
 	go build -o tinc-web-boot -v ./cmd/tinc-web-boot/main.go
