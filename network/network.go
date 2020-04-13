@@ -262,6 +262,10 @@ func (network *Network) defineConfiguration() error {
 		AutoStart: false,
 	}
 
+	if err := network.beforeConfigure(config); err != nil {
+		return err
+	}
+
 	if err := network.Update(config); err != nil {
 		return err
 	}

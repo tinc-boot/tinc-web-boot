@@ -1,6 +1,6 @@
 //
 
-// +build !linux
+// +build !linux,!darwin
 
 package utils
 

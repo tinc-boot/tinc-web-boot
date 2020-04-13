@@ -88,3 +88,7 @@ func (network *Network) findTapInstall(tincBin string) (string, error) {
 	}
 	return res, err
 }
+
+func (network *Network) beforeConfigure(config *Config) error {
+	return nil
+}

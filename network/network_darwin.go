@@ -1,5 +1,3 @@
-// +build darwin linux
-
 package network
 
 import (
@@ -7,5 +5,10 @@ import (
 )
 
 func (network *Network) postConfigure(ctx context.Context, config *Config, tincBin string) error {
+	return nil
+}
+
+func (network *Network) beforeConfigure(config *Config) error {
+	config.Interface = ""
 	return nil
 }
