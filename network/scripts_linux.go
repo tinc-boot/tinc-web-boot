@@ -1,5 +1,3 @@
-// +build linux darwin
-
 package network
 
 import "github.com/phayes/permbits"
