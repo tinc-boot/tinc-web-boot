@@ -4,7 +4,7 @@ import "github.com/phayes/permbits"
 
 const scriptSuffix = ""
 
-const tincUpTxt = `#!/usr/bin/sh
+const tincUpTxt = `#!/bin/sh
 ip addr add {{.Subnet}} dev $INTERFACE
 ip link set dev $INTERFACE up
 `

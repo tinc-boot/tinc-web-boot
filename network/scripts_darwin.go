@@ -4,9 +4,10 @@ import "github.com/phayes/permbits"
 
 const scriptSuffix = ""
 
-const tincUpTxt = `#!/usr/bin/sh
+const tincUpTxt = `#!/bin/sh
 ifconfig $INTERFACE {{.Subnet}} {{.IP}}
 ifconfig $INTERFACE mtu 1350
+route add -net {{.IP}} {{.IP}} 255.255.255.255
 `
 
 const tincDownText = `#!/bin/sh
