@@ -5,7 +5,7 @@ import "github.com/phayes/permbits"
 const scriptSuffix = ""
 
 const tincUpTxt = `#!/usr/bin/sh
-ifconfig $INTERFACE {{.Subnet}} netmask 255.255.255.255
+ifconfig $INTERFACE {{.Subnet}} {{.IP}}
 ifconfig $INTERFACE mtu 1350
 `
 

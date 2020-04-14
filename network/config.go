@@ -1,5 +1,7 @@
 package network
 
+import "strings"
+
 const (
 	CommunicationPort = 1655
 )
@@ -30,4 +32,8 @@ type Node struct {
 	Address   []Address `json:"address,omitempty"`
 	PublicKey string    `json:"publicKey"`
 	Version   int       `json:"version"`
+}
+
+func (n *Node) IP() string {
+	return strings.TrimSpace(strings.Split(n.Subnet, "/")[0])
 }
