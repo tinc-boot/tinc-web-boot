@@ -1,7 +1,6 @@
 package network
 
 import (
-	"errors"
 	"fmt"
 	"github.com/phayes/permbits"
 	"log"
@@ -31,12 +30,12 @@ const subnetDownText = `#!/bin/sh
 `
 
 func postProcessScript(filename string) error {
+	if err := ApplyOwnerOfSudoUser(filename); err != nil {
+		log.Println("post-process", filename, ":", err)
+	}
 	stat, err := permbits.Stat(filename)
 	if err != nil {
 		return err
-	}
-	if err := applyOwnerOfSudoUser(filename); err != nil {
-		log.Println("post-process", filename, ":", err)
 	}
 	stat.SetGroupExecute(true)
 	stat.SetOtherExecute(true)
@@ -44,10 +43,10 @@ func postProcessScript(filename string) error {
 	return permbits.Chmod(filename, stat)
 }
 
-func applyOwnerOfSudoUser(filename string) error {
+func ApplyOwnerOfSudoUser(filename string) error {
 	suser := os.Getenv("SUDO_USER")
 	if suser == "" {
-		return errors.New("no sudo user detected")
+		return nil
 	}
 	info, err := user.Lookup(suser)
 	if err != nil {

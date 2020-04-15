@@ -25,7 +25,11 @@ func (st *Storage) Init() error {
 		return err
 	}
 	st.Root = abs
-	return os.MkdirAll(st.Root, 0755)
+	err = os.MkdirAll(st.Root, 0755)
+	if err != nil {
+		return err
+	}
+	return ApplyOwnerOfSudoUser(st.Root)
 }
 
 func (st *Storage) Get(network string) *Network {
@@ -65,11 +69,23 @@ func (network *Network) Update(config *Config) error {
 	if err != nil {
 		return err
 	}
+	err = ApplyOwnerOfSudoUser(network.hosts())
+	if err != nil {
+		return err
+	}
+	err = ApplyOwnerOfSudoUser(network.Root)
+	if err != nil {
+		return err
+	}
 	data, err := config.Build()
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(network.configFile(), data, 0755)
+	err = ioutil.WriteFile(network.configFile(), data, 0755)
+	if err != nil {
+		return err
+	}
+	return ApplyOwnerOfSudoUser(network.configFile())
 }
 
 func (network *Network) Read() (*Config, error) {
@@ -147,7 +163,11 @@ func (network *Network) put(node *Node) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(network.NodeFile(node.Name), data, 0755)
+	err = ioutil.WriteFile(network.NodeFile(node.Name), data, 0755)
+	if err != nil {
+		return err
+	}
+	return ApplyOwnerOfSudoUser(network.NodeFile(node.Name))
 }
 
 func (network *Network) IsDefined() bool {
@@ -192,6 +212,9 @@ func (network *Network) Configure(ctx context.Context, tincBin string) error {
 
 	if err := network.generateKeysIfNeeded(ctx, tincBin); err != nil {
 		return fmt.Errorf("%s: generate keys: %w", network.Name(), err)
+	}
+	if err := ApplyOwnerOfSudoUser(network.privateKeyFile()); err != nil {
+		return fmt.Errorf("apply sudo user on private key: %w", err)
 	}
 	if err := network.indexPublicNodes(); err != nil {
 		return fmt.Errorf("%s: index public nodes: %w", network.Name(), err)

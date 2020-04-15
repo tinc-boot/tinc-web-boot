@@ -142,6 +142,18 @@ func (impl *netImpl) run(global context.Context) error {
 		defer abort()
 		impl.queryActivePeers(ctx)
 	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		select {
+		case <-ctx.Done():
+		case <-time.After(2 * time.Second):
+			_ = network.ApplyOwnerOfSudoUser(impl.definition.Logfile())
+			_ = network.ApplyOwnerOfSudoUser(impl.definition.Pidfile())
+		}
+	}()
+
 	impl.events.Started.Emit(network.NetworkID{Name: impl.definition.Name()})
 	wg.Wait()
 	return ctx.Err()

@@ -17,3 +17,5 @@ const subnetDownText = `
 `
 
 func postProcessScript(filename string) error { return nil }
+
+func ApplyOwnerOfSudoUser(filename string) error { return nil }
