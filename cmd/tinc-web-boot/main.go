@@ -35,12 +35,14 @@ type Subnet struct {
 }
 
 type AddSubnet struct {
-	Subnet string `name:"subnet" env:"SUBNET" help:"Subnet address" required:"yes"`
-	Node   string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
+	Subnet  string `name:"subnet" env:"SUBNET" help:"Subnet address" required:"yes"`
+	Node    string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
+	Retries int    `name:"retries" env:"RETRIES" help:"Retries attempts" default:"5"`
 }
 
 type RemoveSubnet struct {
-	Node string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
+	Node    string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
+	Retries int    `name:"retries" env:"RETRIES" help:"Retries attempts" default:"5"`
 }
 
 type Root struct {
@@ -154,7 +156,7 @@ func (m *AddSubnet) Run() error {
 	address := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
 
 	url := "http://" + address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/watch"
-	for {
+	for i := 0; i < m.Retries; i++ {
 
 		err := post(ctx, url, map[string]string{
 			"node":   m.Node,
@@ -199,7 +201,7 @@ func (m *RemoveSubnet) Run() error {
 	address := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
 
 	url := "http://" + address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/forget"
-	for {
+	for i := 0; i < m.Retries; i++ {
 
 		err := post(ctx, url, map[string]string{
 			"node": m.Node,
