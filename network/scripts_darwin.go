@@ -12,8 +12,7 @@ import (
 const scriptSuffix = ""
 
 const tincUpTxt = `#!/bin/sh
-ifconfig $INTERFACE {{.Subnet}} {{.IP}}
-ifconfig $INTERFACE mtu 1350
+ifconfig $INTERFACE {{.IP}} netmask 255.255.255.255
 `
 
 const tincDownText = `#!/bin/sh
@@ -21,13 +20,11 @@ ifconfig $INTERFACE down
 `
 
 const subnetUpText = `#!/bin/sh
-route add "$SUBNET" -interface "$INTERFACE"
 {{.Executable}} subnet add
 `
 
 const subnetDownText = `#!/bin/sh
 {{.Executable}} subnet remove
-route delete "$SUBNET" -interface "$INTERFACE"
 `
 
 func postProcessScript(filename string) error {
