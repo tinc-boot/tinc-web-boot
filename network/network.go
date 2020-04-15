@@ -183,10 +183,10 @@ func (network *Network) Configure(ctx context.Context, tincBin string) error {
 	if err := network.saveScript("tinc-down", tincDown(selfNode)); err != nil {
 		return err
 	}
-	if err := network.saveScript("subnet-up", subnetUp(selfExec)); err != nil {
+	if err := network.saveScript("subnet-up", subnetUp(selfExec, selfNode)); err != nil {
 		return err
 	}
-	if err := network.saveScript("subnet-down", subnetDown(selfExec)); err != nil {
+	if err := network.saveScript("subnet-down", subnetDown(selfExec, selfNode)); err != nil {
 		return err
 	}
 

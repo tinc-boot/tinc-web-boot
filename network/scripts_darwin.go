@@ -7,7 +7,6 @@ const scriptSuffix = ""
 const tincUpTxt = `#!/bin/sh
 ifconfig $INTERFACE {{.Subnet}} {{.IP}}
 ifconfig $INTERFACE mtu 1350
-route add -net {{.IP}} {{.IP}} 255.255.255.255
 `
 
 const tincDownText = `#!/bin/sh
@@ -15,11 +14,13 @@ ifconfig $INTERFACE down
 `
 
 const subnetUpText = `#!/bin/sh
+route -n add "$SUBNET" {{.Node.IP}}
 {{.Executable}} subnet add
 `
 
 const subnetDownText = `#!/bin/sh
 {{.Executable}} subnet remove
+route -n delete "$SUBNET" {{.Node.IP}}
 `
 
 func postProcessScript(filename string) error {

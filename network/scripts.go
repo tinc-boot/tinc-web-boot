@@ -20,19 +20,23 @@ func tincDown(selfNode *Node) string {
 	return mustRender(tincDownTpl, selfNode)
 }
 
-func subnetUp(executable string) string {
+func subnetUp(executable string, selfNode *Node) string {
 	var params struct {
 		Executable string
+		Node       Node
 	}
 	params.Executable = executable
+	params.Node = *selfNode
 	return mustRender(subnetUpTpl, params)
 }
 
-func subnetDown(executable string) string {
+func subnetDown(executable string, selfNode *Node) string {
 	var params struct {
 		Executable string
+		Node       Node
 	}
 	params.Executable = executable
+	params.Node = *selfNode
 	return mustRender(subnetDownTpl, params)
 }
 
