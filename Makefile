@@ -29,11 +29,20 @@ windows:
 	GOOS=windows go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
 
 build:
-	mkdir -p build
+	rm -rf build && mkdir -p build
 	go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
 
 clean-test: build
 	rm -rf networks && sudo ./build/tinc-web-boot run --dev --headless
+
+vagrant: build
+	mkdir -p build/alfa build/beta
+	./build/tinc-web-boot run --dev --dev-gen-only --headless --dir build/alfa --dev-address 192.168.33.10
+	./build/tinc-web-boot run --dev --dev-gen-only --headless --dir build/beta --dev-address 192.168.33.20
+	cp build/alfa/example-network/hosts/* build/beta/example-network/hosts/
+	cp -f build/beta/example-network/hosts/* build/alfa/example-network/hosts/
+
+	vagrant up --provision
 
 checkplatform: linux windows darwin
 

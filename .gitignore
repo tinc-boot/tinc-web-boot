@@ -7,3 +7,4 @@ test-data
 node_modules
 web/bindata.go
 /tinc-web-boot
+.vagrant
