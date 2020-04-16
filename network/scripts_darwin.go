@@ -20,11 +20,11 @@ ifconfig $INTERFACE down
 `
 
 const subnetUpText = `#!/bin/sh
-{{.Executable}} subnet add
+{{.Executable}} subnet add && route add -host "$SUBNET" -iface "$INTERFACE"
 `
 
 const subnetDownText = `#!/bin/sh
-{{.Executable}} subnet remove
+{{.Executable}} subnet remove && route delete -host "$SUBNET" -iface "$INTERFACE"
 `
 
 func postProcessScript(filename string) error {

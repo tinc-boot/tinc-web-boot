@@ -22,7 +22,7 @@ ip link set dev $INTERFACE down
 `
 
 const subnetUpText = `#!/bin/sh
-{{.Executable}} subnet add
+{{.Executable}} subnet add && ip route add "$SUBNET" dev "$INTERFACE"
 `
 
 const subnetDownText = `#!/bin/sh

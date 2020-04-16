@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/gin-gonic/gin"
@@ -185,7 +186,9 @@ func (m *AddSubnet) Run() error {
 			"node":   m.Node,
 			"subnet": m.Subnet,
 		})
-
+		if err == badRequest {
+			return badRequest
+		}
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -230,6 +233,10 @@ func (m *RemoveSubnet) Run() error {
 			"node": m.Node,
 		})
 
+		if err == badRequest {
+			return badRequest
+		}
+
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -244,6 +251,8 @@ func (m *RemoveSubnet) Run() error {
 	}
 	return nil
 }
+
+var badRequest = errors.New("bad request")
 
 func post(ctx context.Context, URL string, data interface{}) error {
 	bdata, err := json.Marshal(data)
@@ -260,7 +269,7 @@ func post(ctx context.Context, URL string, data interface{}) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode == http.StatusBadRequest {
-		return nil
+		return badRequest
 	}
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf(res.Status)
