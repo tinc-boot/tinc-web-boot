@@ -65,6 +65,13 @@ func setupRoutes(ctx context.Context, requests chan<- peerReq, ntw *network.Netw
 		if err := gctx.BindJSON(&params); err != nil {
 			return
 		}
+		if _, _, err := net.ParseCIDR(params.Subnet); err != nil {
+			log.Printf("incorrect subnet (%s) found: %v", params.Subnet, err)
+			gctx.AbortWithError(http.StatusBadRequest, err)
+			return
+		} else {
+			log.Println("detected new subnet", params.Subnet, "belongs to", params.Node)
+		}
 		select {
 		case requests <- peerReq{
 			Node:   params.Node,

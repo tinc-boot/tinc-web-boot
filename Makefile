@@ -28,6 +28,13 @@ windows:
 	mkdir -p build
 	GOOS=windows go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
 
+build:
+	mkdir -p build
+	go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
+
+clean-test: build
+	rm -rf networks && sudo ./build/tinc-web-boot run --dev --headless
+
 checkplatform: linux windows darwin
 
-.PHONY: install
+.PHONY: install build

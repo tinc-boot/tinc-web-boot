@@ -236,6 +236,9 @@ func post(ctx context.Context, URL string, data interface{}) error {
 		return err
 	}
 	defer res.Body.Close()
+	if res.StatusCode == http.StatusBadRequest {
+		return nil
+	}
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf(res.Status)
 	}
