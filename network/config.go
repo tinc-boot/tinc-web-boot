@@ -7,12 +7,13 @@ const (
 )
 
 type Config struct {
-	Name      string   `json:"name"`
-	Port      uint16   `json:"port"`
-	Interface string   `json:"interface"`
-	AutoStart bool     `json:"autostart"`
-	Mode      string   `json:"mode"`
-	ConnectTo []string `json:"connectTo,omitempty"`
+	Name       string   `json:"name"`
+	Port       uint16   `json:"port"`
+	Interface  string   `json:"interface"`
+	AutoStart  bool     `json:"autostart"`
+	Mode       string   `json:"mode"`
+	DeviceType string   `json:"deviceType,omitempty"`
+	ConnectTo  []string `json:"connectTo,omitempty"`
 }
 
 type Address struct {

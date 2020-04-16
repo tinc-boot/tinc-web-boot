@@ -10,5 +10,6 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 
 func (network *Network) beforeConfigure(config *Config) error {
 	config.Interface = ""
+	config.DeviceType = "utun"
 	return nil
 }

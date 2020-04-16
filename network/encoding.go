@@ -13,11 +13,12 @@ type builder interface {
 
 func (cfg *Config) Build() (text []byte, err error) {
 	var params = map[string][]interface{}{
-		"Name":      {cfg.Name},
-		"Port":      {fmt.Sprint(cfg.Port)},
-		"Interface": {cfg.Interface},
-		"Mode":      {cfg.Mode},
-		"AutoStart": {cfg.AutoStart},
+		"Name":       {cfg.Name},
+		"Port":       {fmt.Sprint(cfg.Port)},
+		"Interface":  {cfg.Interface},
+		"Mode":       {cfg.Mode},
+		"AutoStart":  {cfg.AutoStart},
+		"DeviceType": {cfg.DeviceType},
 	}
 	for _, con := range cfg.ConnectTo {
 		params["ConnectTo"] = append(params["ConnectTo"], con)
@@ -33,6 +34,7 @@ func (cfg *Config) Parse(text []byte) error {
 	cfg.Port = params.FirstUint16("Port")
 	cfg.Mode = params.First("Mode", "router")
 	cfg.AutoStart = params.FirstBool("AutoStart")
+	cfg.DeviceType = params.First("DeviceType", "")
 	return nil
 }
 
