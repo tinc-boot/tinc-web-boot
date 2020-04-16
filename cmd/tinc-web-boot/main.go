@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/browser"
 	"log"
 	"net/http"
 	"os"
@@ -57,6 +56,7 @@ type Root struct {
 	DevAddress []string `name:"dev-address" env:"DEV_ADDRESS" help:"(dev only) Public addresses" default:"127.0.0.1"`
 	DevPort    uint16   `name:"dev-port" env:"DEV_PORT" help:"(dev only) Development port" default:"10655"`
 	DevSubnet  string   `name:"dev-subnet" env:"DEV_SUBNET" help:"(dev only) Custom subnet for sample network (empty is random)"`
+	NoApp      bool     `name:"no-app" env:"NO_APP" help:"Don't try to open UI in application mode (if possible)"`
 	internal.HttpServer
 }
 
@@ -144,7 +144,7 @@ func (m *Root) Run() error {
 				}
 			}
 
-			err := browser.OpenURL("http://" + m.Bind)
+			err := internal.OpenInBrowser(ctx, "http://"+m.Bind, !m.NoApp)
 			if err != nil {
 				log.Println("failed to open UI:", err)
 			} else {
