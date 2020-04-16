@@ -21,6 +21,8 @@ export interface Config {
     port: number
     interface: string
     autostart: boolean
+    mode: string
+    deviceType: string | null
     connectTo: Array<string> | null
 }
 

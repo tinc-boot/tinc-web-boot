@@ -26,7 +26,7 @@ darwin:
 
 windows:
 	mkdir -p build
-	GOOS=windows go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
+	GOOS=windows go build -o build/tinc-web-boot.exe -v ./cmd/tinc-web-boot/main.go
 
 build:
 	rm -rf build && mkdir -p build

@@ -76,7 +76,7 @@ func (network *Network) findTapInstall(tincBin string) (string, error) {
 			return nil
 		}
 		if info.Name() == "tapinstall.exe" {
-			res = filepath.Join(path, info.Name())
+			res = path
 			return os.ErrExist
 		}
 		return nil
