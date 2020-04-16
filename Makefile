@@ -43,6 +43,13 @@ vagrant: build
 	cp -f build/beta/example-network/hosts/* build/alfa/example-network/hosts/
 
 	vagrant up --provision
+	sleep 10 # warm up
+
+test-connectivity: vagrant
+	test `curl -X POST --data-binary '{"jsonrpc":"2.0", "id": 1, "method": "TincWeb.Peers", "params": ["example-network"] }' 'http://127.0.0.1:18686/api' | \
+		jq '[ .result[] | select(.status.fetched )] | length'` -eq 2 && echo "Connected!" || echo "Connectivity test FAILED"
+
+test: test-connectivity
 
 checkplatform: linux windows darwin
 
