@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 	"tinc-web-boot/utils"
 )
 
@@ -283,6 +284,7 @@ func (network *Network) defineConfiguration() error {
 		Port:      uint16(30000 + rand.Intn(35535)),
 		Interface: "tinc" + suffix,
 		AutoStart: false,
+		Mode:      "Switch",
 	}
 
 	if err := network.beforeConfigure(config); err != nil {
@@ -368,4 +370,8 @@ func IsValidName(name string) bool {
 
 func IsValidNodeName(name string) bool {
 	return regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(name)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }

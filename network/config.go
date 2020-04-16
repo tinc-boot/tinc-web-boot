@@ -11,6 +11,7 @@ type Config struct {
 	Port      uint16   `json:"port"`
 	Interface string   `json:"interface"`
 	AutoStart bool     `json:"autostart"`
+	Mode      string   `json:"mode"`
 	ConnectTo []string `json:"connectTo,omitempty"`
 }
 

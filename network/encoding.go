@@ -16,6 +16,7 @@ func (cfg *Config) Build() (text []byte, err error) {
 		"Name":      {cfg.Name},
 		"Port":      {fmt.Sprint(cfg.Port)},
 		"Interface": {cfg.Interface},
+		"Mode":      {cfg.Mode},
 		"AutoStart": {cfg.AutoStart},
 	}
 	for _, con := range cfg.ConnectTo {
@@ -30,6 +31,7 @@ func (cfg *Config) Parse(text []byte) error {
 	cfg.Interface = params.First("Interface", "")
 	cfg.Name = params.First("Name", "")
 	cfg.Port = params.FirstUint16("Port")
+	cfg.Mode = params.First("Mode", "router")
 	cfg.AutoStart = params.FirstBool("AutoStart")
 	return nil
 }
