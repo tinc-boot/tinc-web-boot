@@ -2,8 +2,8 @@ package internal
 
 import (
 	"context"
-	"github.com/pkg/browser"
 	"log"
+	"os"
 	"os/exec"
 )
 
@@ -16,8 +16,11 @@ func OpenInBrowser(ctx context.Context, url string, app bool) error {
 			}
 			log.Println("open", url, "as app")
 			cmd := exec.CommandContext(ctx, bin, "--app="+url)
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+			useOwner(cmd)
 			return cmd.Start()
 		}
 	}
-	return browser.OpenURL(url)
+	return runGeneral(ctx, url)
 }
