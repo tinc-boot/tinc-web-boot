@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"time"
 	"tinc-web-boot/network"
@@ -95,14 +96,19 @@ func (impl *netImpl) run(global context.Context) error {
 		return fmt.Errorf("configure: %w", err)
 	}
 
+	absDir, err := filepath.Abs(impl.definition.Root)
+	if err != nil {
+		return err
+	}
+
 	ctx, abort := context.WithCancel(global)
 	defer abort()
 
 	cmd := exec.CommandContext(ctx, impl.tincBin, "-D", "-d", "-d", "-d",
 		"--pidfile", impl.definition.Pidfile(),
 		"--logfile", impl.definition.Logfile(),
-		"-c", ".")
-	cmd.Dir = impl.definition.Root
+		"-c", absDir)
+	cmd.Dir = absDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	utils.SetCmdAttrs(cmd)

@@ -3,10 +3,12 @@ package network
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 func (network *Network) postConfigure(ctx context.Context, config *Config, tincBin string) error {
@@ -21,6 +23,7 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 		if iface.Name == config.Interface {
 			return nil
 		}
+		log.Println("Found interface:", iface.Name)
 		interfaces[iface.Name] = true
 	}
 
@@ -41,16 +44,23 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 	}
 
 	// find new interface
-	list, err = net.Interfaces()
-	if err != nil {
-		return err
-	}
-
 	var newInterface string
-	for _, iface := range list {
-		if !interfaces[iface.Name] {
-			newInterface = iface.Name
-			break
+	for newInterface == "" {
+		log.Println("Looking for a new interface")
+		select {
+		case <-time.After(1 * time.Second):
+		case <-ctx.Done():
+		}
+		list, err = net.Interfaces()
+		if err != nil {
+			return err
+		}
+		for _, iface := range list {
+			if !interfaces[iface.Name] {
+				newInterface = iface.Name
+				log.Println("New interface:", iface.Name)
+				break
+			}
 		}
 	}
 
@@ -59,7 +69,7 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 	}
 
 	// rename
-	cmd = exec.CommandContext(ctx, "netsh", "interface", "set", "name",
+	cmd = exec.CommandContext(ctx, "netsh", "interface", "set", "interface",
 		"name", "=", newInterface, "newname", "=", config.Interface)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
