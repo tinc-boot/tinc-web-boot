@@ -46,11 +46,16 @@ type RemoveSubnet struct {
 }
 
 type Root struct {
-	TincBin  string `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
-	Host     string `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
-	Dir      string `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
-	Dev      bool   `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
-	Headless bool   `long:"headless" env:"HEADLESS" description:"Disable launch browser"`
+	TincBin    string   `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
+	Host       string   `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
+	Dir        string   `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
+	Dev        bool     `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
+	Headless   bool     `long:"headless" env:"HEADLESS" description:"Disable launch browser"`
+	DevGenOnly bool     `name:"dev-gen-only" env:"DEV_GEN_ONLY" help:"(dev only) generate sample config but don't run"`
+	DevNet     string   `name:"dev-net" env:"DEV_NET" help:"(dev only) Name of development network" default:"example-network"`
+	DevAddress []string `name:"dev-address" env:"DEV_ADDRESS" help:"(dev only) Public addresses" default:"127.0.0.1"`
+	DevPort    uint16   `name:"dev-port" env:"DEV_PORT" help:"(dev only) Development port" default:"10655"`
+	DevSubnet  string   `name:"dev-subnet" env:"DEV_SUBNET" help:"(dev only) Custom subnet for sample network (empty is random)"`
 	internal.HttpServer
 }
 
@@ -96,9 +101,27 @@ func (m *Root) Run() error {
 	defer pool.Stop()
 
 	if m.Dev {
-		ntw, err := pool.Create("example-network")
+		ntw, err := pool.Create(m.DevNet)
 		if err != nil {
 			return err
+		}
+		var addrs []network.Address
+		for _, addr := range m.DevAddress {
+			addrs = append(addrs, network.Address{
+				Host: addr,
+				Port: m.DevPort,
+			})
+		}
+		err = ntw.Definition().Upgrade(network.Upgrade{
+			Address: addrs,
+			Port:    m.DevPort,
+			Subnet:  m.DevSubnet,
+		})
+		if err != nil {
+			return err
+		}
+		if m.DevGenOnly {
+			return nil
 		}
 		if !ntw.IsRunning() {
 			ntw.Start()

@@ -126,9 +126,19 @@ func (network *Network) Upgrade(upgrade Upgrade) error {
 		return err
 	}
 	n.Version = n.Version + 1
-	n.Address = upgrade.Address
-	n.Subnet = upgrade.Subnet
-	n.Port = upgrade.Port
+	if upgrade.Address != nil {
+		n.Address = upgrade.Address
+	}
+	if upgrade.Subnet != "" {
+		n.Subnet = upgrade.Subnet
+	}
+	if upgrade.Port != 0 {
+		n.Port = upgrade.Port
+		config.Port = upgrade.Port
+	}
+	if err := network.Update(config); err != nil {
+		return err
+	}
 	return network.put(n)
 }
 
