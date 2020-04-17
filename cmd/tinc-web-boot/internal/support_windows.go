@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,4 +39,8 @@ func digAround(dir string) string {
 		return nil
 	})
 	return ans
+}
+
+func Preload(ctx context.Context) error {
+	return nil
 }

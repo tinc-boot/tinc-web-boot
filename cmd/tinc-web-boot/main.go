@@ -76,7 +76,7 @@ func (m *Root) Run() error {
 	if err != nil {
 		return err
 	}
-	log.Println("Detected Tinc binary:", binary)
+	log.Println("detected Tinc binary:", binary)
 
 	ctx, closer := context.WithCancel(context.Background())
 	go func() {
@@ -88,6 +88,12 @@ func (m *Root) Run() error {
 		}
 	}()
 	defer closer()
+
+	err = internal.Preload(ctx)
+	if err != nil {
+		return err
+	}
+	log.Println("preload complete")
 
 	stor := &network.Storage{Root: m.Dir}
 	err = stor.Init()

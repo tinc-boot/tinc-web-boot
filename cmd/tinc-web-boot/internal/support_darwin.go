@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,4 +32,11 @@ func DetectTincBinary(possibleBinary string) (string, error) {
 		err = os.ErrNotExist
 	}
 	return possibleBinary, err
+}
+
+func Preload(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, "kextload", "/Library/Extensions/tun.kext", "/Library/Extensions/tap.kext")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }

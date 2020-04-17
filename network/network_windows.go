@@ -23,7 +23,7 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 		if iface.Name == config.Interface {
 			return nil
 		}
-		log.Println("Found interface:", iface.Name)
+		log.Println("found interface:", iface.Name)
 		interfaces[iface.Name] = true
 	}
 
@@ -46,7 +46,7 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 	// find new interface
 	var newInterface string
 	for newInterface == "" {
-		log.Println("Looking for a new interface")
+		log.Println("looking for a new interface")
 		select {
 		case <-time.After(1 * time.Second):
 		case <-ctx.Done():
@@ -58,7 +58,7 @@ func (network *Network) postConfigure(ctx context.Context, config *Config, tincB
 		for _, iface := range list {
 			if !interfaces[iface.Name] {
 				newInterface = iface.Name
-				log.Println("New interface:", iface.Name)
+				log.Println("new interface:", iface.Name)
 				break
 			}
 		}
