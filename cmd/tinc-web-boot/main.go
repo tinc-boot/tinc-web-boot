@@ -129,7 +129,7 @@ func (m *Root) Run() error {
 		}
 	}
 
-	webApi := web.New(pool, m.Dev)
+	webApi := web.New(pool, m.Dev, m.Dev || !m.Headless)
 	if !m.Headless {
 		go func() {
 
@@ -152,7 +152,6 @@ func (m *Root) Run() error {
 			}
 		}()
 	}
-
 	return m.Serve(ctx, webApi)
 }
 

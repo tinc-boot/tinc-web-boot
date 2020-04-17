@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"github.com/gen2brain/beeep"
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
 	"github.com/reddec/struct-view/support/events"
@@ -13,7 +14,7 @@ import (
 )
 
 //go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
-func New(pool *tincd.Tincd, dev bool) *gin.Engine {
+func New(pool *tincd.Tincd, dev bool, notify bool) *gin.Engine {
 
 	router := gin.Default()
 
@@ -55,6 +56,24 @@ func New(pool *tincd.Tincd, dev bool) *gin.Engine {
 	router.GET("/", func(gctx *gin.Context) {
 		gctx.Redirect(http.StatusTemporaryRedirect, "/static")
 	})
+	if notify {
+		router.POST("/api/notify", func(gctx *gin.Context) {
+			var message struct {
+				Title   string `json:"title" form:"title"`
+				Message string `json:"message" form:"message"`
+			}
+			if err := gctx.Bind(&message); err != nil {
+				return
+			}
+
+			err := beeep.Notify(message.Title, message.Message, "")
+			if err != nil {
+				gctx.AbortWithError(http.StatusInternalServerError, err)
+				return
+			}
+			gctx.AbortWithStatus(http.StatusNoContent)
+		})
+	}
 
 	return router
 }
