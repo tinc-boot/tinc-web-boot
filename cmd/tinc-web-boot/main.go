@@ -162,6 +162,9 @@ func (m *Root) Run() error {
 }
 
 func (m *AddSubnet) Run() error {
+	if strings.Contains(m.Subnet, ":") {
+		return errors.New("MAC subnet")
+	}
 	ctx, closer := context.WithCancel(context.Background())
 	go func() {
 		c := make(chan os.Signal, 2)
