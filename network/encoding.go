@@ -19,6 +19,7 @@ func (cfg *Config) Build() (text []byte, err error) {
 		"Mode":       {cfg.Mode},
 		"AutoStart":  {cfg.AutoStart},
 		"DeviceType": {cfg.DeviceType},
+		"Device":     {cfg.Device},
 	}
 	for _, con := range cfg.ConnectTo {
 		params["ConnectTo"] = append(params["ConnectTo"], con)
@@ -35,6 +36,7 @@ func (cfg *Config) Parse(text []byte) error {
 	cfg.Mode = params.First("Mode", "router")
 	cfg.AutoStart = params.FirstBool("AutoStart")
 	cfg.DeviceType = params.First("DeviceType", "")
+	cfg.Device = params.First("Device", "")
 	return nil
 }
 
