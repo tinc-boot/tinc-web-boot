@@ -136,6 +136,9 @@ func (network *Network) Upgrade(upgrade Upgrade) error {
 		n.Port = upgrade.Port
 		config.Port = upgrade.Port
 	}
+	if upgrade.Device != "" {
+		config.Device = upgrade.Device
+	}
 	if err := network.Update(config); err != nil {
 		return err
 	}

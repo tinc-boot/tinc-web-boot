@@ -459,7 +459,7 @@
             "api"
           ]
         },
-        "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n\n"
+        "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
       }
     }
   ]

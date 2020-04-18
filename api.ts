@@ -23,6 +23,7 @@ export interface Config {
     autostart: boolean
     mode: string
     deviceType: string | null
+    device: string | null
     connectTo: Array<string> | null
 }
 
@@ -59,9 +60,10 @@ export interface Sharing {
 }
 
 export interface Upgrade {
-    subnet: string
-    port: number
+    subnet: string | null
+    port: number | null
     address: Array<Address> | null
+    device: string | null
 }
 
 

@@ -23,9 +23,10 @@ type Address struct {
 }
 
 type Upgrade struct {
-	Subnet  string    `json:"subnet"`
-	Port    uint16    `json:"port"`
+	Subnet  string    `json:"subnet,omitempty"`
+	Port    uint16    `json:"port,omitempty"`
 	Address []Address `json:"address,omitempty"`
+	Device  string    `json:"device,omitempty"`
 }
 
 type Node struct {

@@ -401,3 +401,4 @@ EOF
 | subnet | `string` |  |
 | port | `uint16` |  |
 | address | `[]Address` |  |
+| device | `string` |  |
