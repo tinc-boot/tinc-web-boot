@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -39,6 +40,9 @@ func (network *Network) findAvailableTap() (string, error) {
 	var used = make([]bool, darwinMaxTapDevices)
 	for _, net := range nets {
 		cfg, err := net.Read()
+		if os.IsNotExist(err) {
+			continue
+		}
 		if err != nil {
 			return "", err
 		}
