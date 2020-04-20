@@ -53,3 +53,11 @@ type TincWeb interface {
 	// In some cases requires restart
 	Upgrade(network string, update network.Upgrade) (*network.Node, error)
 }
+
+// Operations with tinc-web-boot related to UI
+type TincWebUI interface {
+	// Issue and sign token
+	IssueAccessToken(validDays uint) (string, error)
+	// Make desktop notification if system supports it
+	Notify(title, message string) (bool, error)
+}

@@ -1,6 +1,6 @@
 package network
 
-//go:generate events-gen -p network -E Events -s -P -o events.go --ts ../events.ts
+//go:generate events-gen -p network -E Events -s -P -o events.go --ts ../support/ts/events.ts
 
 //event:"Started"
 //event:"Stopped"

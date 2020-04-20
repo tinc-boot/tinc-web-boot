@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"os"
@@ -134,8 +135,12 @@ func (m *Root) Run() error {
 			ntw.Start()
 		}
 	}
-
-	webApi := web.New(pool, m.Dev, m.Dev || !m.Headless)
+	apiCfg := web.Config{
+		Dev:            m.Dev,
+		AuthorizedOnly: m.Headless,
+		AuthKey:        uuid.New().String(),
+	}
+	webApi := apiCfg.New(pool)
 	if !m.Headless {
 		go func() {
 

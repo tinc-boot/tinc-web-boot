@@ -2,10 +2,12 @@ package web
 
 import (
 	"fmt"
-	"github.com/gen2brain/beeep"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
 	"github.com/reddec/struct-view/support/events"
+	"log"
+	"net"
 	"net/http"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
@@ -13,12 +15,18 @@ import (
 	"tinc-web-boot/web/shared"
 )
 
+type Config struct {
+	Dev            bool
+	AuthorizedOnly bool
+	AuthKey        string
+}
+
 //go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
-func New(pool *tincd.Tincd, dev bool, notify bool) *gin.Engine {
+func (cfg Config) New(pool *tincd.Tincd) *gin.Engine {
 
 	router := gin.Default()
 
-	if dev {
+	if cfg.Dev {
 		router.Use(func(gctx *gin.Context) {
 			gctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 			gctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -45,37 +53,47 @@ func New(pool *tincd.Tincd, dev bool, notify bool) *gin.Engine {
 
 	var jsonRouter jsonrpc2.Router
 	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
+	internal.RegisterTincWebUI(&jsonRouter, &uiRoutes{key: cfg.AuthKey})
 
 	streamer := events.NewWebsocketStream()
 	pool.Events().Sink(streamer.Feed)
 
-	router.POST("/api", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
-	router.GET("/api", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
-	router.GET("/api/events", gin.WrapH(streamer))
 	router.StaticFS("/static", AssetFile())
+
+	api := router.Group("/api", cfg.authorizedOnly())
+
+	api.POST("/", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
+	api.GET("/", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
+	api.GET("/events", gin.WrapH(streamer))
+
 	router.GET("/", func(gctx *gin.Context) {
 		gctx.Redirect(http.StatusTemporaryRedirect, "/static")
 	})
-	if notify {
-		router.POST("/api/notify", func(gctx *gin.Context) {
-			var message struct {
-				Title   string `json:"title" form:"title"`
-				Message string `json:"message" form:"message"`
-			}
-			if err := gctx.Bind(&message); err != nil {
-				return
-			}
-
-			err := beeep.Notify(message.Title, message.Message, "")
-			if err != nil {
-				gctx.AbortWithError(http.StatusInternalServerError, err)
-				return
-			}
-			gctx.AbortWithStatus(http.StatusNoContent)
-		})
-	}
-
 	return router
+}
+
+func (cfg Config) authorizedOnly() gin.HandlerFunc {
+	return func(gctx *gin.Context) {
+		host, _, _ := net.SplitHostPort(gctx.Request.RemoteAddr)
+		if host == "127.0.0.1" && !cfg.AuthorizedOnly {
+			// assume localhost connection are authorized
+			gctx.Next()
+			return
+		}
+		token := gctx.GetHeader("Authorization")
+		_, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(cfg.AuthKey), nil
+		})
+		if err != nil {
+			log.Println("[guard]", "check token failed:", err)
+			gctx.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		gctx.Next()
+	}
 }
 
 type api struct {

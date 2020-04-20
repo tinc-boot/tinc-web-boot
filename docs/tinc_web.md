@@ -26,7 +26,7 @@ List of available networks (briefly, without config)
 * Returns: `[]*Network`
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -57,7 +57,7 @@ Detailed network info
 | 0 | name | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -88,7 +88,7 @@ Create new network if not exists
 | 0 | name | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -119,7 +119,7 @@ Remove network (returns true if network existed)
 | 0 | network | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -143,7 +143,7 @@ Start or re-start network
 | 0 | network | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -174,7 +174,7 @@ Stop network
 | 0 | network | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -205,7 +205,7 @@ Peers brief list in network  (briefly, without config)
 | 0 | network | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -238,7 +238,7 @@ Peer detailed info by in the network
 | 1 | name | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -272,7 +272,7 @@ Return created (or used) network with full configuration
 | 0 | sharing | `Sharing` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -309,7 +309,7 @@ Share network and generate configuration file.
 | 0 | network | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -339,7 +339,7 @@ Node definition in network (aka - self node)
 | 0 | network | `string` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,
@@ -375,7 +375,7 @@ In some cases requires restart
 | 1 | update | `Upgrade` |
 
 ```bash
-curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api" <<EOF
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
 {
     "jsonrpc" : "2.0",
     "id" : 1,

@@ -208,7 +208,7 @@ export class TincWeb {
 
 
     // Create new API handler to TincWeb.
-    constructor(base_url : string = 'ws://127.0.0.1:8686/api') {
+    constructor(base_url : string = 'ws://127.0.0.1:8686/api/') {
         const proto = (new URL(base_url)).protocol;
         switch (proto) {
             case "ws:":
