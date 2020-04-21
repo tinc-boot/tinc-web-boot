@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gen2brain/beeep"
 	"net"
@@ -28,7 +29,7 @@ func (srv *uiRoutes) Notify(title, message string) (bool, error) {
 }
 
 func (srv *uiRoutes) Endpoints() ([]shared.Endpoint, error) {
-	var ans []shared.Endpoint
+	var ans = make([]shared.Endpoint, 0)
 	list, err := net.Interfaces()
 	if err != nil {
 		return nil, err
@@ -39,7 +40,9 @@ func (srv *uiRoutes) Endpoints() ([]shared.Endpoint, error) {
 			return nil, err
 		}
 		for _, addr := range addrs {
-			if ip, ok := addr.(*net.IPAddr); ok {
+
+			if ip, ok := addr.(*net.IPNet); ok {
+				fmt.Println(ip)
 				if v4 := ip.IP.To4(); v4 != nil {
 					ans = append(ans, shared.Endpoint{
 						Host: v4.String(),

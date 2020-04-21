@@ -147,7 +147,7 @@ func (m *Root) Run() error {
 		LocalUIPort:     uint16(port),
 		PublicAddresses: m.UIPublicAddress,
 	}
-	webApi := apiCfg.New(pool)
+	webApi, uiApp := apiCfg.New(pool)
 	if !m.Headless {
 		go func() {
 
@@ -169,6 +169,12 @@ func (m *Root) Run() error {
 				log.Println("UI opened")
 			}
 		}()
+	} else {
+		token, err := uiApp.IssueAccessToken(3650)
+		if err != nil {
+			return fmt.Errorf("issue token: %w", err)
+		}
+		fmt.Println("\n-------------\n\n", "TOKEN:", token, "\n\n-------------")
 	}
 	return m.Serve(ctx, webApi)
 }

@@ -24,7 +24,7 @@ type Config struct {
 }
 
 //go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
-func (cfg Config) New(pool *tincd.Tincd) *gin.Engine {
+func (cfg Config) New(pool *tincd.Tincd) (*gin.Engine, *uiRoutes) {
 
 	router := gin.Default()
 
@@ -54,12 +54,14 @@ func (cfg Config) New(pool *tincd.Tincd) *gin.Engine {
 	}
 
 	var jsonRouter jsonrpc2.Router
-	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
-	internal.RegisterTincWebUI(&jsonRouter, &uiRoutes{
+	uiApp := &uiRoutes{
 		key:           cfg.AuthKey,
 		port:          cfg.LocalUIPort,
 		publicAddress: cfg.PublicAddresses,
-	})
+	}
+
+	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
+	internal.RegisterTincWebUI(&jsonRouter, uiApp)
 
 	streamer := events.NewWebsocketStream()
 	pool.Events().Sink(streamer.Feed)
@@ -75,7 +77,7 @@ func (cfg Config) New(pool *tincd.Tincd) *gin.Engine {
 	router.GET("/", func(gctx *gin.Context) {
 		gctx.Redirect(http.StatusTemporaryRedirect, "/static")
 	})
-	return router
+	return router, uiApp
 }
 
 func (cfg Config) authorizedOnly() gin.HandlerFunc {
