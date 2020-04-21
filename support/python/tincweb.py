@@ -2,7 +2,7 @@ from aiohttp import client
 
 from dataclasses import dataclass
 
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 
 
 

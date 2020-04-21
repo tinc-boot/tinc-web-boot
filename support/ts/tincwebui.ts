@@ -18,7 +18,7 @@ export interface Endpoint {
 
 
 
-export enum EndpointKind{
+export enum EndpointKind {
     Local = "local",
     Public = "public",
 }
