@@ -27,7 +27,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -38,7 +38,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Networks\n\nList of available networks (briefly, without config)\n\n* Method: `TincWeb.Networks`\n* Returns: `[]*Network`\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
@@ -65,7 +66,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -76,7 +77,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Network\n\nDetailed network info\n\n* Method: `TincWeb.Network`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | name | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
@@ -103,7 +105,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -114,7 +116,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Create\n\nCreate new network if not exists\n\n* Method: `TincWeb.Create`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | name | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
@@ -141,7 +144,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -152,7 +155,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Remove\n\nRemove network (returns true if network existed)\n\n* Method: `TincWeb.Remove`\n* Returns: `bool`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n\n"
@@ -179,7 +183,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -190,7 +194,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Start\n\nStart or re-start network\n\n* Method: `TincWeb.Start`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
@@ -217,7 +222,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -228,7 +233,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Stop\n\nStop network\n\n* Method: `TincWeb.Stop`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
@@ -255,7 +261,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -266,7 +272,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Peers\n\nPeers brief list in network  (briefly, without config)\n\n* Method: `TincWeb.Peers`\n* Returns: `[]*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| status | `*tincd.Peer` |  |\n| config | `*network.Node` |  |\n\n"
@@ -293,7 +300,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -304,7 +311,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Peer\n\nPeer detailed info by in the network\n\n* Method: `TincWeb.Peer`\n* Returns: `*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | name | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| status | `*tincd.Peer` |  |\n| config | `*network.Node` |  |\n\n"
@@ -331,7 +339,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -342,7 +350,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Import\n\nImport another tinc-web network configuration file.\nIt means let nodes defined in config join to the network.\nReturn created (or used) network with full configuration\n\n* Method: `TincWeb.Import`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | sharing | `Sharing` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
@@ -369,7 +378,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -380,7 +389,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Share\n\nShare network and generate configuration file.\n\n* Method: `TincWeb.Share`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
@@ -407,7 +417,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -418,7 +428,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Node\n\nNode definition in network (aka - self node)\n\n* Method: `TincWeb.Node`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n\n"
@@ -445,7 +456,7 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:8686/api",
+          "raw": "http://127.0.0.1:8686/api/",
           "protocol": "http",
           "host": [
             "127",
@@ -456,7 +467,8 @@
           "port": "8686",
           "path": [
             "",
-            "api"
+            "api",
+            ""
           ]
         },
         "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
