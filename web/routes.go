@@ -68,7 +68,7 @@ func (cfg Config) New(pool *tincd.Tincd) (*gin.Engine, *uiRoutes) {
 
 	router.StaticFS("/static", AssetFile())
 
-	api := router.Group("/api", cfg.authorizedOnly())
+	api := router.Group("/api/:token/", cfg.authorizedOnly())
 
 	api.POST("/", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
 	api.GET("/", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
@@ -88,7 +88,7 @@ func (cfg Config) authorizedOnly() gin.HandlerFunc {
 			gctx.Next()
 			return
 		}
-		token := gctx.GetHeader("Authorization")
+		token := gctx.Param("token")
 		_, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
