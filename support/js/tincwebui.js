@@ -44,6 +44,18 @@ export class TincWebUI {
         }));
     }
 
+    /**
+    Endpoints list to access web UI
+    **/
+    async endpoints(){
+        return (await this.__call('Endpoints', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWebUI.Endpoints",
+            "id" : this.__next_id(),
+            "params" : []
+        }));
+    }
+
 
 
     __next_id() {

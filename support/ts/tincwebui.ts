@@ -10,6 +10,19 @@ export class TincWebUIError extends Error {
 }
 
 
+export interface Endpoint {
+    host: string
+    port: number
+    kind: EndpointKind
+}
+
+
+
+export enum EndpointKind {
+    Local = "local",
+    Public = "public",
+}
+
 
 // support stuff
 
@@ -195,6 +208,18 @@ export class TincWebUI {
         })) as boolean;
     }
 
+    /**
+    Endpoints list to access web UI
+    **/
+    async endpoints(): Promise<Array<Endpoint>> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "TincWebUI.Endpoints",
+            "id" : this.__next_id(),
+            "params" : []
+        })) as Array<Endpoint>;
+    }
+
 
     private __next_id() {
         this.__id += 1;
@@ -212,7 +237,7 @@ export class TincWebUI {
         }
 
         if (data.error) {
-            throw new TincWebError(data.error.message, data.error.code, data.error.data);
+            throw new TincWebUIError(data.error.message, data.error.code, data.error.data);
         }
 
         return data.result;

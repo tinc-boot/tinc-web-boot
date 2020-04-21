@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -47,17 +48,18 @@ type RemoveSubnet struct {
 }
 
 type Root struct {
-	TincBin    string   `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
-	Host       string   `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
-	Dir        string   `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
-	Dev        bool     `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
-	Headless   bool     `long:"headless" env:"HEADLESS" description:"Disable launch browser"`
-	DevGenOnly bool     `name:"dev-gen-only" env:"DEV_GEN_ONLY" help:"(dev only) generate sample config but don't run"`
-	DevNet     string   `name:"dev-net" env:"DEV_NET" help:"(dev only) Name of development network" default:"example-network"`
-	DevAddress []string `name:"dev-address" env:"DEV_ADDRESS" help:"(dev only) Public addresses" default:"127.0.0.1"`
-	DevPort    uint16   `name:"dev-port" env:"DEV_PORT" help:"(dev only) Development port" default:"10655"`
-	DevSubnet  string   `name:"dev-subnet" env:"DEV_SUBNET" help:"(dev only) Custom subnet for sample network (empty is random)"`
-	NoApp      bool     `name:"no-app" env:"NO_APP" help:"Don't try to open UI in application mode (if possible)"`
+	TincBin         string   `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd"`
+	Host            string   `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1"`
+	Dir             string   `name:"dir" env:"DIR" help:"Directory for config" default:"networks"`
+	Dev             bool     `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)"`
+	Headless        bool     `long:"headless" env:"HEADLESS" description:"Disable launch browser"`
+	DevGenOnly      bool     `name:"dev-gen-only" env:"DEV_GEN_ONLY" help:"(dev only) generate sample config but don't run"`
+	DevNet          string   `name:"dev-net" env:"DEV_NET" help:"(dev only) Name of development network" default:"example-network"`
+	DevAddress      []string `name:"dev-address" env:"DEV_ADDRESS" help:"(dev only) Public addresses" default:"127.0.0.1"`
+	DevPort         uint16   `name:"dev-port" env:"DEV_PORT" help:"(dev only) Development port" default:"10655"`
+	DevSubnet       string   `name:"dev-subnet" env:"DEV_SUBNET" help:"(dev only) Custom subnet for sample network (empty is random)"`
+	NoApp           bool     `name:"no-app" env:"NO_APP" help:"Don't try to open UI in application mode (if possible)"`
+	UIPublicAddress []string `name:"ui-public-address" env:"UI_PUBLIC_ADDRESS" help:"Custom UI public addresses (host:port) for links"`
 	internal.HttpServer
 }
 
@@ -135,10 +137,15 @@ func (m *Root) Run() error {
 			ntw.Start()
 		}
 	}
+
+	_, portStr, _ := net.SplitHostPort(m.Bind)
+	port, _ := strconv.Atoi(portStr)
 	apiCfg := web.Config{
-		Dev:            m.Dev,
-		AuthorizedOnly: m.Headless,
-		AuthKey:        uuid.New().String(),
+		Dev:             m.Dev,
+		AuthorizedOnly:  m.Headless,
+		AuthKey:         uuid.New().String(),
+		LocalUIPort:     uint16(port),
+		PublicAddresses: m.UIPublicAddress,
 	}
 	webApi := apiCfg.New(pool)
 	if !m.Headless {

@@ -1,8 +1,8 @@
-import requests
+from aiohttp import client
 
 from dataclasses import dataclass
 
-from typing import Any, Optional, List
+from typing import List, Any, Optional
 
 
 
@@ -228,206 +228,206 @@ class TincWebClient:
     Public Tinc-Web API (json-rpc 2.0)
     """
 
-    def __init__(self, base_url: str = 'http://127.0.0.1:8686/api/', session: Optional[requests.Session] = None):
+    def __init__(self, base_url: str = 'http://127.0.0.1:8686/api/', session: Optional[client.ClientSession] = None):
         self.__url = base_url
         self.__id = 1
-        self.__session = session or requests
+        self.__request = session.request if session is not None else client.request
 
     def __next_id(self):
         self.__id += 1
         return self.__id
 
-    def networks(self) -> List[Network]:
+    async def networks(self) -> List[Network]:
         """
         List of available networks (briefly, without config)
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Networks",
             "id": self.__next_id(),
             "params": []
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('networks', payload['error'])
         return [Network.from_json(x) for x in (payload['result'] or [])]
 
-    def network(self, name: str) -> Network:
+    async def network(self, name: str) -> Network:
         """
         Detailed network info
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Network",
             "id": self.__next_id(),
             "params": [name, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('network', payload['error'])
         return Network.from_json(payload['result'])
 
-    def create(self, name: str) -> Network:
+    async def create(self, name: str) -> Network:
         """
         Create new network if not exists
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Create",
             "id": self.__next_id(),
             "params": [name, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('create', payload['error'])
         return Network.from_json(payload['result'])
 
-    def remove(self, network: str) -> bool:
+    async def remove(self, network: str) -> bool:
         """
         Remove network (returns true if network existed)
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Remove",
             "id": self.__next_id(),
             "params": [network, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('remove', payload['error'])
         return payload['result']
 
-    def start(self, network: str) -> Network:
+    async def start(self, network: str) -> Network:
         """
         Start or re-start network
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Start",
             "id": self.__next_id(),
             "params": [network, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('start', payload['error'])
         return Network.from_json(payload['result'])
 
-    def stop(self, network: str) -> Network:
+    async def stop(self, network: str) -> Network:
         """
         Stop network
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Stop",
             "id": self.__next_id(),
             "params": [network, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('stop', payload['error'])
         return Network.from_json(payload['result'])
 
-    def peers(self, network: str) -> List[PeerInfo]:
+    async def peers(self, network: str) -> List[PeerInfo]:
         """
         Peers brief list in network  (briefly, without config)
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Peers",
             "id": self.__next_id(),
             "params": [network, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('peers', payload['error'])
         return [PeerInfo.from_json(x) for x in (payload['result'] or [])]
 
-    def peer(self, network: str, name: str) -> PeerInfo:
+    async def peer(self, network: str, name: str) -> PeerInfo:
         """
         Peer detailed info by in the network
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Peer",
             "id": self.__next_id(),
             "params": [network, name, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('peer', payload['error'])
         return PeerInfo.from_json(payload['result'])
 
-    def import(self, sharing: Sharing) -> Network:
+    async def import(self, sharing: Sharing) -> Network:
         """
         Import another tinc-web network configuration file.
 It means let nodes defined in config join to the network.
 Return created (or used) network with full configuration
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Import",
             "id": self.__next_id(),
             "params": [sharing.to_json(), ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('import', payload['error'])
         return Network.from_json(payload['result'])
 
-    def share(self, network: str) -> Sharing:
+    async def share(self, network: str) -> Sharing:
         """
         Share network and generate configuration file.
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Share",
             "id": self.__next_id(),
             "params": [network, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('share', payload['error'])
         return Sharing.from_json(payload['result'])
 
-    def node(self, network: str) -> Node:
+    async def node(self, network: str) -> Node:
         """
         Node definition in network (aka - self node)
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Node",
             "id": self.__next_id(),
             "params": [network, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('node', payload['error'])
         return Node.from_json(payload['result'])
 
-    def upgrade(self, network: str, update: Upgrade) -> Node:
+    async def upgrade(self, network: str, update: Upgrade) -> Node:
         """
         Upgrade node parameters.
 In some cases requires restart
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWeb.Upgrade",
             "id": self.__next_id(),
             "params": [network, update.to_json(), ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebError.from_json('upgrade', payload['error'])
         return Node.from_json(payload['result'])

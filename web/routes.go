@@ -16,9 +16,11 @@ import (
 )
 
 type Config struct {
-	Dev            bool
-	AuthorizedOnly bool
-	AuthKey        string
+	Dev             bool
+	AuthorizedOnly  bool
+	AuthKey         string
+	LocalUIPort     uint16
+	PublicAddresses []string
 }
 
 //go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
@@ -53,7 +55,11 @@ func (cfg Config) New(pool *tincd.Tincd) *gin.Engine {
 
 	var jsonRouter jsonrpc2.Router
 	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
-	internal.RegisterTincWebUI(&jsonRouter, &uiRoutes{key: cfg.AuthKey})
+	internal.RegisterTincWebUI(&jsonRouter, &uiRoutes{
+		key:           cfg.AuthKey,
+		port:          cfg.LocalUIPort,
+		publicAddress: cfg.PublicAddresses,
+	})
 
 	streamer := events.NewWebsocketStream()
 	pool.Events().Sink(streamer.Feed)

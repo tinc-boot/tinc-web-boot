@@ -5,6 +5,7 @@ Operations with tinc-web-boot related to UI
 
 * [TincWebUI.IssueAccessToken](#tincwebuiissueaccesstoken) - Issue and sign token
 * [TincWebUI.Notify](#tincwebuinotify) - Make desktop notification if system supports it
+* [TincWebUI.Endpoints](#tincwebuiendpoints) - Endpoints list to access web UI
 
 
 
@@ -56,3 +57,28 @@ curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686
 }
 EOF
 ```
+
+## TincWebUI.Endpoints
+
+Endpoints list to access web UI
+
+* Method: `TincWebUI.Endpoints`
+* Returns: `[]Endpoint`
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWebUI.Endpoints",
+    "params" : []
+}
+EOF
+```
+### Endpoint
+
+| Json | Type | Comment |
+|------|------|---------|
+| host | `string` |  |
+| port | `uint16` |  |
+| kind | `EndpointKind` |  |

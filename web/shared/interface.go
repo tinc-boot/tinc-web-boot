@@ -54,10 +54,25 @@ type TincWeb interface {
 	Upgrade(network string, update network.Upgrade) (*network.Node, error)
 }
 
+type EndpointKind string
+
+const (
+	Local  EndpointKind = "local"
+	Public EndpointKind = "public"
+)
+
+type Endpoint struct {
+	Host string       `json:"host"`
+	Port uint16       `json:"port"`
+	Kind EndpointKind `json:"kind"`
+}
+
 // Operations with tinc-web-boot related to UI
 type TincWebUI interface {
 	// Issue and sign token
 	IssueAccessToken(validDays uint) (string, error)
 	// Make desktop notification if system supports it
 	Notify(title, message string) (bool, error)
+	// Endpoints list to access web UI
+	Endpoints() ([]Endpoint, error)
 }

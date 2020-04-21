@@ -1,8 +1,44 @@
-import requests
+from aiohttp import client
+
+from dataclasses import dataclass
+
+from enum import Enum
+from typing import Optional, List
+
+
+class EndpointKind(Enum):
+    LOCAL = "local"
+    PUBLIC = "public"
+
+    def to_json(self) -> str:
+        return self.value
+
+    @staticmethod
+    def from_json(payload: str) -> 'EndpointKind':
+        return EndpointKind(payload)
 
 
 
+@dataclass
+class Endpoint:
+    host: 'str'
+    port: 'int'
+    kind: 'EndpointKind'
 
+    def to_json(self) -> dict:
+        return {
+            "host": self.host,
+            "port": self.port,
+            "kind": self.kind.to_json(),
+        }
+
+    @staticmethod
+    def from_json(payload: dict) -> 'Endpoint':
+        return Endpoint(
+                host=payload['host'],
+                port=payload['port'],
+                kind=EndpointKind.from_json(payload['kind']),
+        )
 
 
 class TincWebUIError(RuntimeError):
@@ -27,43 +63,59 @@ class TincWebUIClient:
     Operations with tinc-web-boot related to UI
     """
 
-    def __init__(self, base_url: str = 'http://127.0.0.1:8686/api/', session: Optional[requests.Session] = None):
+    def __init__(self, base_url: str = 'http://127.0.0.1:8686/api/', session: Optional[client.ClientSession] = None):
         self.__url = base_url
         self.__id = 1
-        self.__session = session or requests
+        self.__request = session.request if session is not None else client.request
 
     def __next_id(self):
         self.__id += 1
         return self.__id
 
-    def issue_access_token(self, valid_days: int) -> str:
+    async def issue_access_token(self, valid_days: int) -> str:
         """
         Issue and sign token
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWebUI.IssueAccessToken",
             "id": self.__next_id(),
             "params": [valid_days, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebUIError.from_json('issue_access_token', payload['error'])
         return payload['result']
 
-    def notify(self, title: str, message: str) -> bool:
+    async def notify(self, title: str, message: str) -> bool:
         """
         Make desktop notification if system supports it
         """
-        response = self.__session.post(self.__url, json={
+        response = await self.__request('POST', self.__url, json={
             "jsonrpc": "2.0",
             "method": "TincWebUI.Notify",
             "id": self.__next_id(),
             "params": [title, message, ]
         })
-        assert response.ok, str(response.status_code) + " " + str(response.reason)
-        payload = response.json()
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
         if 'error' in payload:
             raise TincWebUIError.from_json('notify', payload['error'])
         return payload['result']
+
+    async def endpoints(self) -> List[Endpoint]:
+        """
+        Endpoints list to access web UI
+        """
+        response = await self.__request('POST', self.__url, json={
+            "jsonrpc": "2.0",
+            "method": "TincWebUI.Endpoints",
+            "id": self.__next_id(),
+            "params": []
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise TincWebUIError.from_json('endpoints', payload['error'])
+        return [Endpoint.from_json(x) for x in (payload['result'] or [])]
