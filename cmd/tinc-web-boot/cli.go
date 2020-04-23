@@ -68,7 +68,8 @@ func (m *getNetwork) Run(global *globalContext) error {
 
 type shareNetwork struct {
 	baseParam
-	Name string `arg:"name" required:"yes"`
+	Output string `short:"o" name:"output" env:"OUTPUT" help:"Output file (empty or - for stdout)" default:"-"`
+	Name   string `arg:"name" required:"yes"`
 }
 
 func (m *shareNetwork) Run(global *globalContext) error {
@@ -76,7 +77,16 @@ func (m *shareNetwork) Run(global *globalContext) error {
 	if err != nil {
 		return err
 	}
-	enc := json.NewEncoder(os.Stdout)
+	var f = os.Stdout
+	if m.Output != "" && m.Output != "-" {
+		fs, err := os.Create(m.Output)
+		if err != nil {
+			return err
+		}
+		defer fs.Close()
+		f = fs
+	}
+	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
 	return enc.Encode(share)
 }
