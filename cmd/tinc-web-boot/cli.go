@@ -90,3 +90,32 @@ func (m *shareNetwork) Run(global *globalContext) error {
 	enc.SetIndent("", "  ")
 	return enc.Encode(share)
 }
+
+type importNetwork struct {
+	baseParam
+	Input string `short:"i" name:"input" env:"INPUT" help:"Input file (empty or - for stdin)" default:"-"`
+	Name  string `arg:"name" help:"optional name for network" optional:"yes"`
+}
+
+func (m *importNetwork) Run(global *globalContext) error {
+	var f = os.Stdin
+	if m.Input != "" && m.Input != "-" {
+		fs, err := os.Open(m.Input)
+		if err != nil {
+			return err
+		}
+		defer fs.Close()
+		f = fs
+	}
+	dec := json.NewDecoder(f)
+	var cfg tincweb.Sharing
+	err := dec.Decode(&cfg)
+	if err != nil {
+		return err
+	}
+	if m.Name != "" {
+		cfg.Name = m.Name
+	}
+	_, err = m.Client().Import(global.ctx, cfg)
+	return err
+}
