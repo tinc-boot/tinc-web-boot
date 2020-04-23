@@ -8,11 +8,11 @@ import (
 )
 
 type HttpServer struct {
-	GracefulShutdown time.Duration `name:"graceful-shutdown" env:"GRACEFUL_SHUTDOWN" description:"Interval before server shutdown" default:"15s"`
-	Bind             string        `name:"bind" env:"BIND" description:"Address to where bind HTTP server" default:"127.0.0.1:8686"`
-	TLS              bool          `name:"tls" env:"TLS" description:"Enable HTTPS serving with TLS"`
-	CertFile         string        `name:"cert-file" env:"CERT_FILE" description:"Path to certificate for TLS" default:"server.crt"`
-	KeyFile          string        `name:"key-file" env:"KEY_FILE" description:"Path to private key for TLS" default:"server.key"`
+	GracefulShutdown time.Duration `name:"graceful-shutdown" env:"GRACEFUL_SHUTDOWN" help:"Interval before server shutdown" default:"15s"`
+	Bind             string        `name:"bind" env:"BIND" help:"Address to where bind HTTP server" default:"127.0.0.1:8686"`
+	TLS              bool          `name:"tls" env:"TLS" help:"Enable HTTPS serving with TLS"`
+	CertFile         string        `name:"cert-file" env:"CERT_FILE" help:"Path to certificate for TLS" default:"server.crt"`
+	KeyFile          string        `name:"key-file" env:"KEY_FILE" help:"Path to private key for TLS" default:"server.key"`
 }
 
 func (qs *HttpServer) Serve(globalCtx context.Context, handler http.Handler) error {
