@@ -14,23 +14,23 @@ regen: bindata ui
 	PATH="$(PATH):$(shell go env GOPATH)/bin" go generate web/routes.go
 
 backend: regen
-	go build -o tinc-web-boot -v ./cmd/tinc-web-boot/main.go
+	go build -o tinc-web-boot -v ./cmd/tinc-web-boot/
 
 linux:
 	mkdir -p build
-	GOOS=linux go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
+	GOOS=linux go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/
 
 darwin:
 	mkdir -p build
-	GOOS=darwin go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
+	GOOS=darwin go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/
 
 windows:
 	mkdir -p build
-	GOOS=windows go build -o build/tinc-web-boot.exe -v ./cmd/tinc-web-boot/main.go
+	GOOS=windows go build -o build/tinc-web-boot.exe -v ./cmd/tinc-web-boot/
 
 build:
 	rm -rf build && mkdir -p build
-	go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/main.go
+	go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/
 
 clean-test: build
 	rm -rf networks && sudo ./build/tinc-web-boot run --dev --headless

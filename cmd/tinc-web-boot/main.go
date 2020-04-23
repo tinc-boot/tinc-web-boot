@@ -25,9 +25,16 @@ import (
 
 var version = "dev"
 
+type globalContext struct {
+	ctx context.Context
+}
+
 type Main struct {
 	Run     Root             `cmd:"run" default:"1"`
 	Subnet  Subnet           `cmd:"subnet"`
+	List    listNetworks     `cmd:"list" help:"List networks"`
+	Info    getNetwork       `cmd:"info" help:"Get network info"`
+	Share   shareNetwork     `cmd:"share" help:"Share network"`
 	Version kong.VersionFlag `name:"version" help:"print version and exit"`
 }
 
@@ -67,11 +74,22 @@ type Root struct {
 func main() {
 	var cli Main
 	ctx := kong.Parse(&cli, kong.Vars{"version": version})
-	err := ctx.Run(nil)
+
+	gctx, closer := context.WithCancel(context.Background())
+	go func() {
+		c := make(chan os.Signal, 2)
+		signal.Notify(c, os.Kill, os.Interrupt)
+		for range c {
+			closer()
+			break
+		}
+	}()
+	defer closer()
+	err := ctx.Run(&globalContext{ctx: gctx})
 	ctx.FatalIfErrorf(err)
 }
 
-func (m *Root) Run() error {
+func (m *Root) Run(global *globalContext) error {
 	if !m.Dev {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -82,18 +100,7 @@ func (m *Root) Run() error {
 	}
 	log.Println("detected Tinc binary:", binary)
 
-	ctx, closer := context.WithCancel(context.Background())
-	go func() {
-		c := make(chan os.Signal, 2)
-		signal.Notify(c, os.Kill, os.Interrupt)
-		for range c {
-			closer()
-			break
-		}
-	}()
-	defer closer()
-
-	err = internal.Preload(ctx)
+	err = internal.Preload(global.ctx)
 	if err != nil {
 		return err
 	}
@@ -105,7 +112,7 @@ func (m *Root) Run() error {
 		return err
 	}
 
-	pool, err := tincd.New(ctx, stor, binary)
+	pool, err := tincd.New(global.ctx, stor, binary)
 	if err != nil {
 		return err
 	}
@@ -155,17 +162,17 @@ func (m *Root) Run() error {
 		go func() {
 
 			for i := 0; i < 50; i++ {
-				if isGuiAvailable(ctx, m.Bind, time.Second) {
+				if isGuiAvailable(global.ctx, m.Bind, time.Second) {
 					break
 				}
 				select {
 				case <-time.After(100 * time.Millisecond):
-				case <-ctx.Done():
+				case <-global.ctx.Done():
 					return
 				}
 			}
 
-			err := internal.OpenInBrowser(ctx, "http://"+m.Bind, !m.NoApp)
+			err := internal.OpenInBrowser(global.ctx, "http://"+m.Bind, !m.NoApp)
 			if err != nil {
 				log.Println("failed to open UI:", err)
 			} else {
@@ -179,7 +186,7 @@ func (m *Root) Run() error {
 		}
 		fmt.Println("\n-------------\n\n", "TOKEN:", token, "\n\n-------------")
 	}
-	return m.Serve(ctx, webApi)
+	return m.Serve(global.ctx, webApi)
 }
 
 func (m *AddSubnet) Run() error {

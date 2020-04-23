@@ -9,6 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.6.2
 	github.com/google/uuid v1.1.1
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/reddec/jsonrpc2 v0.1.13

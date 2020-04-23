@@ -3,7 +3,7 @@ before:
   hooks:
     - make regen
 builds:
-- main: ./cmd/tinc-web-boot/main.go
+- main: ./cmd/tinc-web-boot/
   id: posix-build
   binary: tinc-web-boot
   env:
@@ -21,7 +21,7 @@ builds:
     - darwin
   flags:
     - -trimpath
-- main: ./cmd/tinc-web-boot/main.go
+- main: ./cmd/tinc-web-boot/
   id: windows-build
   binary: tinc-web-boot
   env:
