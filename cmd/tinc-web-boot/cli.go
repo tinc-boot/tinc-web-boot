@@ -119,3 +119,24 @@ func (m *importNetwork) Run(global *globalContext) error {
 	_, err = m.Client().Import(global.ctx, cfg)
 	return err
 }
+
+type peers struct {
+	baseParam
+	Network string `arg:"network" required:"yes"`
+}
+
+func (m *peers) Run(global *globalContext) error {
+	list, err := m.Client().Peers(global.ctx, m.Network)
+	if err != nil {
+		return err
+	}
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Connected"})
+	for _, peer := range list {
+		table.Append([]string{
+			peer.Name, fmt.Sprint(peer.Online),
+		})
+	}
+	table.Render()
+	return nil
+}

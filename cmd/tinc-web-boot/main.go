@@ -36,6 +36,7 @@ type Main struct {
 	Info    getNetwork       `cmd:"info" help:"Get network info"`
 	Share   shareNetwork     `cmd:"share" help:"Share network"`
 	Import  importNetwork    `cmd:"import" help:"Import network"`
+	Peers   peers            `cmd:"peers" help:"List connected peers"`
 	Version kong.VersionFlag `name:"version" help:"print version and exit"`
 }
 

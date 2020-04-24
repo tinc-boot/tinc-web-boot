@@ -70,9 +70,9 @@ func (cfg Config) New(pool *tincd.Tincd) (*gin.Engine, *uiRoutes) {
 
 	api := router.Group("/api/:token/", cfg.authorizedOnly())
 
-	api.POST("/", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
-	api.GET("/", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
-	api.GET("/events", gin.WrapH(streamer))
+	api.POST("", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
+	api.GET("", gin.WrapH(jsonrpc2.HandlerWS(&jsonRouter)))
+	api.GET("events", gin.WrapH(streamer))
 
 	router.GET("/", func(gctx *gin.Context) {
 		gctx.Redirect(http.StatusTemporaryRedirect, "/static")
