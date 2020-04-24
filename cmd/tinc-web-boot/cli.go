@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"os"
+	"strings"
 	"tinc-web-boot/support/go/tincweb"
 )
 
@@ -131,10 +132,14 @@ func (m *peers) Run(global *globalContext) error {
 		return err
 	}
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Connected"})
+	table.SetHeader([]string{"Name", "Connected", "Address"})
 	for _, peer := range list {
+		info, err := m.Client().Peer(global.ctx, m.Network, peer.Name)
+		if err != nil {
+			return err
+		}
 		table.Append([]string{
-			peer.Name, fmt.Sprint(peer.Online),
+			peer.Name, fmt.Sprint(peer.Online), strings.Split(info.Configuration.Subnet, "/")[0],
 		})
 	}
 	table.Render()
