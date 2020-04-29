@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/gin-gonic/gin"
@@ -15,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"time"
 	"tinc-web-boot/cmd/tinc-web-boot/internal"
 	"tinc-web-boot/network"
@@ -31,29 +27,12 @@ type globalContext struct {
 
 type Main struct {
 	Run     Root             `cmd:"run" default:"1"`
-	Subnet  Subnet           `cmd:"subnet"`
 	List    listNetworks     `cmd:"list" help:"List networks"`
 	Info    getNetwork       `cmd:"info" help:"Get network info"`
 	Share   shareNetwork     `cmd:"share" help:"Share network"`
 	Import  importNetwork    `cmd:"import" help:"Import network"`
 	Peers   peers            `cmd:"peers" help:"List connected peers"`
 	Version kong.VersionFlag `name:"version" help:"print version and exit"`
-}
-
-type Subnet struct {
-	Add    AddSubnet    `cmd:"add"`
-	Remove RemoveSubnet `cmd:"remove"`
-}
-
-type AddSubnet struct {
-	Subnet  string `name:"subnet" env:"SUBNET" help:"Subnet address" required:"yes"`
-	Node    string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
-	Retries int    `name:"retries" env:"RETRIES" help:"Retries attempts" default:"5"`
-}
-
-type RemoveSubnet struct {
-	Node    string `name:"node" env:"NODE" help:"PeerInfo name" required:"yes"`
-	Retries int    `name:"retries" env:"RETRIES" help:"Retries attempts" default:"5"`
 }
 
 type Root struct {
@@ -192,131 +171,6 @@ func (m *Root) Run(global *globalContext) error {
 		fmt.Println("\n-------------\n\n", "TOKEN:", token, "\n\n-------------")
 	}
 	return m.Serve(global.ctx, webApi)
-}
-
-func (m *AddSubnet) Run() error {
-	if strings.Contains(m.Subnet, ":") {
-		return errors.New("MAC subnet")
-	}
-	ctx, closer := context.WithCancel(context.Background())
-	go func() {
-		c := make(chan os.Signal, 2)
-		signal.Notify(c, os.Kill, os.Interrupt)
-		for range c {
-			closer()
-			break
-		}
-	}()
-	defer closer()
-
-	ntw := &network.Network{Root: "."}
-	config, err := ntw.Read()
-	if err != nil {
-		return err
-	}
-	selfNode, err := ntw.Node(config.Name)
-	if err != nil {
-		return err
-	}
-	address := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
-
-	url := "http://" + address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/watch"
-	for i := 0; i < m.Retries; i++ {
-
-		err := post(ctx, url, map[string]string{
-			"node":   m.Node,
-			"subnet": m.Subnet,
-		})
-		if err == badRequest {
-			return badRequest
-		}
-		if err != nil {
-			log.Println(err)
-		} else {
-			break
-		}
-
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(time.Second):
-		}
-	}
-	return nil
-}
-
-func (m *RemoveSubnet) Run() error {
-	ctx, closer := context.WithCancel(context.Background())
-	go func() {
-		c := make(chan os.Signal, 2)
-		signal.Notify(c, os.Kill, os.Interrupt)
-		for range c {
-			closer()
-			break
-		}
-	}()
-	defer closer()
-	ntw := &network.Network{Root: "."}
-	config, err := ntw.Read()
-	if err != nil {
-		return err
-	}
-	selfNode, err := ntw.Node(config.Name)
-	if err != nil {
-		return err
-	}
-	address := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
-
-	url := "http://" + address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/forget"
-	for i := 0; i < m.Retries; i++ {
-
-		err := post(ctx, url, map[string]string{
-			"node": m.Node,
-		})
-
-		if err == badRequest {
-			return badRequest
-		}
-
-		if err != nil {
-			log.Println(err)
-		} else {
-			break
-		}
-
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(time.Second):
-		}
-	}
-	return nil
-}
-
-var badRequest = errors.New("bad request")
-
-func post(ctx context.Context, URL string, data interface{}) error {
-	bdata, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, URL, bytes.NewReader(bdata))
-	if err != nil {
-		return err
-	}
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode == http.StatusBadRequest {
-		return badRequest
-	}
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf(res.Status)
-	}
-
-	return nil
 }
 
 func isGuiAvailable(global context.Context, url string, timeout time.Duration) bool {
