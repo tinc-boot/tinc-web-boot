@@ -35,6 +35,7 @@ class Config:
     interface: 'str'
     auto_start: 'bool'
     mode: 'str'
+    ip: 'str'
     device_type: 'Optional[str]'
     device: 'Optional[str]'
     connect_to: 'Optional[List[str]]'
@@ -46,6 +47,7 @@ class Config:
             "interface": self.interface,
             "autostart": self.auto_start,
             "mode": self.mode,
+            "ip": self.ip,
             "deviceType": self.device_type,
             "device": self.device,
             "connectTo": self.connect_to,
@@ -59,6 +61,7 @@ class Config:
                 interface=payload['interface'],
                 auto_start=payload['autostart'],
                 mode=payload['mode'],
+                ip=payload['ip'],
                 device_type=payload['deviceType'],
                 device=payload['device'],
                 connect_to=payload['connectTo'] or [],
@@ -269,7 +272,7 @@ class TincWebClient:
             raise TincWebError.from_json('network', payload['error'])
         return Network.from_json(payload['result'])
 
-    async def create(self, name: str) -> Network:
+    async def create(self, name: str, subnet: str) -> Network:
         """
         Create new network if not exists
         """
@@ -277,7 +280,7 @@ class TincWebClient:
             "jsonrpc": "2.0",
             "method": "TincWeb.Create",
             "id": self.__next_id(),
-            "params": [name, ]
+            "params": [name, subnet, ]
         })
         assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
         payload = await response.json()

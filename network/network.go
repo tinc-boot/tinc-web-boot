@@ -3,9 +3,11 @@ package network
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -116,6 +118,14 @@ func (network *Network) Node(name string) (*Node, error) {
 	return &nd, nd.Parse(data)
 }
 
+func (network *Network) Self() (*Node, error) {
+	cfg, err := network.Read()
+	if err != nil {
+		return nil, err
+	}
+	return network.Node(cfg.Name)
+}
+
 func (network *Network) Upgrade(upgrade Upgrade) error {
 	config, err := network.Read()
 	if err != nil {
@@ -128,9 +138,6 @@ func (network *Network) Upgrade(upgrade Upgrade) error {
 	n.Version = n.Version + 1
 	if upgrade.Address != nil {
 		n.Address = upgrade.Address
-	}
-	if upgrade.Subnet != "" {
-		n.Subnet = upgrade.Subnet
 	}
 	if upgrade.Port != 0 {
 		n.Port = upgrade.Port
@@ -169,6 +176,13 @@ func (network *Network) Put(node *Node) error {
 		// do not touch self node host file
 		return nil
 	}
+	self, err := network.Node(config.Name)
+	if err != nil {
+		return err
+	}
+	if self.Subnet != node.Subnet {
+		return fmt.Errorf("missmatch subnet for self node (%s) and new node %s (%s)", self.Subnet, node.Name, node.Subnet)
+	}
 	return network.put(node)
 }
 
@@ -189,16 +203,20 @@ func (network *Network) IsDefined() bool {
 	return err == nil && !v.IsDir()
 }
 
-func (network *Network) Configure(ctx context.Context, tincBin string) error {
+func (network *Network) Configure(ctx context.Context, tincBin string, subnet *net.IPNet) error {
 	if !IsValidName(network.Name()) {
 		return fmt.Errorf("invalid network name")
 	}
 	if err := os.MkdirAll(network.hosts(), 0755); err != nil {
 		return err
 	}
-	if err := network.defineConfiguration(); err != nil {
+	if err := network.defineConfiguration(subnet); err != nil {
 		return err
 	}
+	return network.Prepare(ctx, tincBin)
+}
+
+func (network *Network) Prepare(ctx context.Context, tincBin string) error {
 	config, err := network.Read()
 	if err != nil {
 		return err
@@ -207,20 +225,11 @@ func (network *Network) Configure(ctx context.Context, tincBin string) error {
 	if err != nil {
 		return err
 	}
-	selfExec, err := os.Executable()
-	if err != nil {
-		return err
-	}
+
 	if err := network.saveScript("tinc-up", tincUp(selfNode)); err != nil {
 		return err
 	}
 	if err := network.saveScript("tinc-down", tincDown(selfNode)); err != nil {
-		return err
-	}
-	if err := network.saveScript("subnet-up", subnetUp(selfExec, selfNode)); err != nil {
-		return err
-	}
-	if err := network.saveScript("subnet-down", subnetDown(selfExec, selfNode)); err != nil {
 		return err
 	}
 
@@ -276,28 +285,24 @@ func (network *Network) indexPublicNodes() error {
 	return network.Update(config)
 }
 
-func (network *Network) defineConfiguration() error {
+func (network *Network) defineConfiguration(subnet *net.IPNet) error {
 	if network.IsDefined() {
 		return nil
+	}
+	if bits, _ := subnet.Mask.Size(); bits != 32 {
+		return fmt.Errorf("currently supported only IPv4 subnets")
 	}
 	hostname, _ := os.Hostname()
 	suffix := utils.RandStringRunesCustom(6, suffixRunes)
 	nodeName := regexp.MustCompile(`[^a-z0-9]*`).ReplaceAllString(strings.ToLower(hostname), "") + "_" + suffix
-	addressBytes := [4]uint8{
-		10,
-		uint8(rand.Intn(255)),
-		uint8(rand.Intn(255)),
-		1 + uint8(rand.Intn(254)),
-	}
-	subnet := fmt.Sprintf("%d.%d.%d.%d/%d", addressBytes[0],
-		addressBytes[1], addressBytes[2], addressBytes[3], 32)
-
+	selfIP := generateRandomIPv4(subnet)
 	config := &Config{
 		Name:      nodeName,
 		Port:      uint16(30000 + rand.Intn(35535)),
 		Interface: "tinc" + suffix,
 		AutoStart: false,
-		Mode:      "Switch",
+		Mode:      "switch",
+		IP:        selfIP.String(),
 	}
 
 	if err := network.beforeConfigure(config); err != nil {
@@ -315,7 +320,7 @@ func (network *Network) defineConfiguration() error {
 
 	nodeConfig := &Node{
 		Name:    nodeName,
-		Subnet:  subnet,
+		Subnet:  subnet.String(),
 		Port:    config.Port,
 		Version: version,
 	}
@@ -383,6 +388,21 @@ func IsValidName(name string) bool {
 
 func IsValidNodeName(name string) bool {
 	return regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(name)
+}
+
+func generateRandomIPv4(subnet *net.IPNet) net.IP {
+	netsize, bits := subnet.Mask.Size()
+	baseIP := binary.BigEndian.Uint32(subnet.IP)
+
+	maxIP := (1 << (bits - netsize)) - 1
+	if maxIP <= 0 {
+		return subnet.IP
+	}
+	genIP := baseIP + (1 + rand.Uint32()%uint32(maxIP))
+
+	var ip [4]byte
+	binary.BigEndian.PutUint32(ip[:], uint32(genIP))
+	return net.IP(ip[:])
 }
 
 func init() {

@@ -121,7 +121,11 @@ func (m *Root) Run(global *globalContext) error {
 	defer pool.Stop()
 
 	if m.Dev {
-		ntw, err := pool.Create(m.DevNet)
+		_, subnet, err := net.ParseCIDR(m.DevSubnet)
+		if err != nil {
+			return err
+		}
+		ntw, err := pool.Create(m.DevNet, subnet)
 		if err != nil {
 			return err
 		}
@@ -135,7 +139,6 @@ func (m *Root) Run(global *globalContext) error {
 		err = ntw.Definition().Upgrade(network.Upgrade{
 			Address: addrs,
 			Port:    m.DevPort,
-			Subnet:  m.DevSubnet,
 		})
 		if err != nil {
 			return err

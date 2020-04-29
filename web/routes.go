@@ -176,8 +176,12 @@ func (srv *api) Peer(network, name string) (*shared.PeerInfo, error) {
 	}, nil
 }
 
-func (srv *api) Create(name string) (*shared.Network, error) {
-	ntw, err := srv.pool.Create(name)
+func (srv *api) Create(name, subnet string) (*shared.Network, error) {
+	_, cidr, err := net.ParseCIDR(subnet)
+	if err != nil {
+		return nil, fmt.Errorf("parse subnet: %w", err)
+	}
+	ntw, err := srv.pool.Create(name, cidr)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +221,11 @@ func (srv *api) Stop(network string) (*shared.Network, error) {
 }
 
 func (srv *api) Import(sharing shared.Sharing) (*shared.Network, error) {
-	ntw, err := srv.pool.Create(sharing.Name)
+	_, cidr, err := net.ParseCIDR(sharing.Subnet)
+	if err != nil {
+		return nil, fmt.Errorf("parse subnet: %w", err)
+	}
+	ntw, err := srv.pool.Create(sharing.Name, cidr)
 	if err != nil {
 		return nil, err
 	}
@@ -259,6 +267,7 @@ func (srv *api) Share(network string) (*shared.Sharing, error) {
 			return nil, fmt.Errorf("get node %s: %w", name, err)
 		}
 		ans.Nodes = append(ans.Nodes, node)
+		ans.Subnet = node.Subnet
 	}
 
 	return &ans, nil

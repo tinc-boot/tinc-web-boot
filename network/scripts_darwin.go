@@ -12,19 +12,11 @@ import (
 const scriptSuffix = ""
 
 const tincUpTxt = `#!/bin/sh
-ifconfig $INTERFACE {{.IP}} netmask 255.255.255.255
+ifconfig $INTERFACE {{.Subnet}}
 `
 
 const tincDownText = `#!/bin/sh
 ifconfig $INTERFACE down
-`
-
-const subnetUpText = `#!/bin/sh
-{{.Executable}} subnet add && route add -host "$SUBNET" -iface "$INTERFACE"
-`
-
-const subnetDownText = `#!/bin/sh
-{{.Executable}} subnet remove && route delete -host "$SUBNET" -iface "$INTERFACE"
 `
 
 func postProcessScript(filename string) error {

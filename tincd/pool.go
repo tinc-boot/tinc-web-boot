@@ -3,6 +3,7 @@ package tincd
 import (
 	"context"
 	"fmt"
+	"net"
 	"sort"
 	"sync"
 	"tinc-web-boot/network"
@@ -68,13 +69,17 @@ func (pool *Tincd) Get(name string) (*netImpl, error) {
 	return v, nil
 }
 
-func (pool *Tincd) Create(name string) (*netImpl, error) {
+func (pool *Tincd) Create(name string, subnet *net.IPNet) (*netImpl, error) {
 	if !network.IsValidName(name) {
 		return nil, fmt.Errorf("invalid network name")
 	}
 	v, created := pool.ensure(pool.storage.Get(name))
 	if created {
-		return v, v.definition.Configure(pool.ctx, pool.tincBin)
+		return v, v.definition.Configure(pool.ctx, pool.tincBin, subnet)
+	} else if node, err := v.Definition().Self(); err != nil {
+		return nil, err
+	} else if node.Subnet != subnet.String() {
+		return nil, fmt.Errorf("network %s already exists and has different subnet %s, but expected %s", name, node.Subnet, subnet.String())
 	}
 	return v, nil
 }

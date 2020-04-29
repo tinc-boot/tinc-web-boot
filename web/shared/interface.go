@@ -19,8 +19,9 @@ type PeerInfo struct {
 }
 
 type Sharing struct {
-	Name  string          `json:"name"`
-	Nodes []*network.Node `json:"node,omitempty"`
+	Name   string          `json:"name"`
+	Subnet string          `json:"subnet"`
+	Nodes  []*network.Node `json:"node,omitempty"`
 }
 
 // Public Tinc-Web API (json-rpc 2.0)
@@ -30,7 +31,7 @@ type TincWeb interface {
 	// Detailed network info
 	Network(name string) (*Network, error)
 	// Create new network if not exists
-	Create(name string) (*Network, error)
+	Create(name, subnet string) (*Network, error)
 	// Remove network (returns true if network existed)
 	Remove(network string) (bool, error)
 	// Start or re-start network

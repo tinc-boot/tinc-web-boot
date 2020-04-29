@@ -33,17 +33,18 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 	router.RegisterFunc("TincWeb.Create", func(params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"name"`
+			Arg1 string `json:"subnet"`
 		}
 		var err error
 		if positional {
-			err = jsonrpc2.UnmarshalArray(params, &args.Arg0)
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
 		} else {
 			err = json.Unmarshal(params, &args)
 		}
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Create(args.Arg0)
+		return wrap.Create(args.Arg0, args.Arg1)
 	})
 
 	router.RegisterFunc("TincWeb.Remove", func(params json.RawMessage, positional bool) (interface{}, error) {

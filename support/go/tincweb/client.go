@@ -20,6 +20,7 @@ type Config struct {
 	Interface  string   `json:"interface"`
 	AutoStart  bool     `json:"autostart"`
 	Mode       string   `json:"mode"`
+	IP         string   `json:"ip"`
 	DeviceType string   `json:"deviceType"`
 	Device     string   `json:"device"`
 	ConnectTo  []string `json:"connectTo"`
@@ -92,8 +93,8 @@ func (impl *TincWebClient) Network(ctx context.Context, name string) (reply *Net
 }
 
 // Create new network if not exists
-func (impl *TincWebClient) Create(ctx context.Context, name string) (reply *Network, err error) {
-	err = client.CallHTTP(ctx, impl.BaseURL, "TincWeb.Create", atomic.AddUint64(&impl.sequence, 1), &reply, name)
+func (impl *TincWebClient) Create(ctx context.Context, name string, subnet string) (reply *Network, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "TincWeb.Create", atomic.AddUint64(&impl.sequence, 1), &reply, name, subnet)
 	return
 }
 

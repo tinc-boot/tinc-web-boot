@@ -120,7 +120,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Create\n\nCreate new network if not exists\n\n* Method: `TincWeb.Create`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | name | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+        "description": "# TincWeb.Create\n\nCreate new network if not exists\n\n* Method: `TincWeb.Create`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | name | `string` |\n| 1 | subnet | `string` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
       }
     },
     {

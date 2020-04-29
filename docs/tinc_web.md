@@ -86,6 +86,7 @@ Create new network if not exists
 | Position | Name | Type |
 |----------|------|------|
 | 0 | name | `string` |
+| 1 | subnet | `string` |
 
 ```bash
 curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF

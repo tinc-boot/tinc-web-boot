@@ -22,6 +22,7 @@ export interface Config {
     interface: string
     autostart: boolean
     mode: string
+    ip: string
     deviceType: string | null
     device: string | null
     connectTo: Array<string> | null
@@ -256,12 +257,12 @@ export class TincWeb {
     /**
     Create new network if not exists
     **/
-    async create(name: string): Promise<Network> {
+    async create(name: string, subnet: string): Promise<Network> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Create",
             "id" : this.__next_id(),
-            "params" : [name]
+            "params" : [name, subnet]
         })) as Network;
     }
 

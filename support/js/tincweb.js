@@ -47,12 +47,12 @@ export class TincWeb {
     /**
     Create new network if not exists
     **/
-    async create(name){
+    async create(name, subnet){
         return (await this.__call('Create', {
             "jsonrpc" : "2.0",
             "method" : "TincWeb.Create",
             "id" : this.__next_id(),
-            "params" : [name]
+            "params" : [name, subnet]
         }));
     }
 

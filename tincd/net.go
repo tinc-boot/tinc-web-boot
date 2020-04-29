@@ -92,7 +92,7 @@ func (impl *netImpl) unsafeStop() {
 }
 
 func (impl *netImpl) run(global context.Context) error {
-	if err := impl.definition.Configure(global, impl.tincBin); err != nil {
+	if err := impl.definition.Prepare(global, impl.tincBin); err != nil {
 		return fmt.Errorf("configure: %w", err)
 	}
 

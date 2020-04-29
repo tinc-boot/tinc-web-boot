@@ -21,14 +21,6 @@ ip addr del {{.Subnet}} dev $INTERFACE
 ip link set dev $INTERFACE down
 `
 
-const subnetUpText = `#!/bin/sh
-{{.Executable}} subnet add && ip route add "$SUBNET" dev "$INTERFACE"
-`
-
-const subnetDownText = `#!/bin/sh
-{{.Executable}} subnet remove
-`
-
 func postProcessScript(filename string) error {
 	if err := ApplyOwnerOfSudoUser(filename); err != nil {
 		log.Println("post-process", filename, ":", err)

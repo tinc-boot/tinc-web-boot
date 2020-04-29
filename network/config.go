@@ -1,7 +1,5 @@
 package network
 
-import "strings"
-
 const (
 	CommunicationPort = 1655
 )
@@ -12,6 +10,7 @@ type Config struct {
 	Interface  string   `json:"interface"`
 	AutoStart  bool     `json:"autostart"`
 	Mode       string   `json:"mode"`
+	IP         string   `json:"ip"`
 	DeviceType string   `json:"deviceType,omitempty"`
 	Device     string   `json:"device,omitempty"`
 	ConnectTo  []string `json:"connectTo,omitempty"`
@@ -23,7 +22,6 @@ type Address struct {
 }
 
 type Upgrade struct {
-	Subnet  string    `json:"subnet,omitempty"`
 	Port    uint16    `json:"port,omitempty"`
 	Address []Address `json:"address,omitempty"`
 	Device  string    `json:"device,omitempty"`
@@ -36,8 +34,4 @@ type Node struct {
 	Address   []Address `json:"address,omitempty"`
 	PublicKey string    `json:"publicKey"`
 	Version   int       `json:"version"`
-}
-
-func (n *Node) IP() string {
-	return strings.TrimSpace(strings.Split(n.Subnet, "/")[0])
 }
