@@ -9,16 +9,14 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 	"tinc-web-boot/network"
 )
 
 type peerReq struct {
-	Node   string
-	Subnet string
-	Add    bool
+	Address string
+	Add     bool
 }
 
 type peersManager struct {
@@ -37,40 +35,41 @@ LOOP:
 			break LOOP
 		case req := <-peers:
 			if req.Add {
-				peer := pl.Add(ctx, req.Node, req.Subnet)
+				peer := pl.Add(ctx, req.Address)
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 					pl.events.PeerDiscovered.Emit(network.PeerID{
 						Network: pl.network.Name(),
-						Node:    req.Node,
-						Subnet:  req.Subnet,
+						Node:    peer.Node(),
+						Address: peer.Address,
 					})
 					peer.run(ctx)
 					pl.events.PeerJoined.Emit(network.PeerID{
 						Network: pl.network.Name(),
-						Node:    req.Node,
-						Subnet:  req.Subnet,
+						Node:    peer.Node(),
+						Address: peer.Address,
 					})
 				}()
 			} else {
-				pl.Remove(req.Node)
-				pl.events.PeerLeft.Emit(network.PeerID{
-					Network: pl.network.Name(),
-					Node:    req.Node,
-					Subnet:  req.Subnet,
-				})
+				peer := pl.Remove(req.Address)
+				if peer != nil {
+					pl.events.PeerLeft.Emit(network.PeerID{
+						Network: pl.network.Name(),
+						Address: peer.Address,
+						Node:    peer.Node(),
+					})
+				}
 			}
 		}
 	}
 	wg.Wait()
 }
 
-func (pl *peersManager) Add(ctx context.Context, node, subnet string) *Peer {
+func (pl *peersManager) Add(ctx context.Context, address string) *Peer {
 	ctx, cancel := context.WithCancel(ctx)
 	p := &Peer{
-		Node:    node,
-		Subnet:  subnet,
+		Address: address,
 		stop:    cancel,
 		network: pl.network,
 	}
@@ -78,11 +77,13 @@ func (pl *peersManager) Add(ctx context.Context, node, subnet string) *Peer {
 	return p
 }
 
-func (pl *peersManager) Remove(node string) {
-	v, ok := pl.remove(node)
+func (pl *peersManager) Remove(address string) *Peer {
+	v, ok := pl.remove(address)
 	if ok {
 		v.stop()
+		return v
 	}
+	return nil
 }
 
 func (pl *peersManager) add(newPeer *Peer) {
@@ -91,14 +92,14 @@ func (pl *peersManager) add(newPeer *Peer) {
 	if pl.list == nil {
 		pl.list = make(map[string]*Peer)
 	}
-	pl.list[newPeer.Node] = newPeer
+	pl.list[newPeer.Address] = newPeer
 }
 
-func (pl *peersManager) remove(name string) (*Peer, bool) {
+func (pl *peersManager) remove(address string) (*Peer, bool) {
 	pl.lock.Lock()
 	defer pl.lock.Unlock()
-	v, ok := pl.list[name]
-	delete(pl.list, name)
+	v, ok := pl.list[address]
+	delete(pl.list, address)
 	return v, ok
 }
 
@@ -110,7 +111,7 @@ func (pl *peersManager) List() []*Peer {
 	}
 	pl.lock.RUnlock()
 	sort.Slice(cp, func(i, j int) bool {
-		return cp[i].Node < cp[j].Node
+		return cp[i].Address < cp[j].Address
 	})
 	return cp
 }
@@ -123,11 +124,18 @@ func (pl *peersManager) Get(name string) (*Peer, bool) {
 }
 
 type Peer struct {
-	Node    string `json:"node"`
-	Subnet  string `json:"subnet"`
-	Fetched bool   `json:"fetched"`
+	Address string        `json:"address"`
+	Fetched bool          `json:"fetched"`
+	Config  *network.Node `json:"config,omitempty"`
 	stop    func()
 	network *network.Network
+}
+
+func (peer *Peer) Node() string {
+	if peer.Fetched {
+		return peer.Config.Name
+	}
+	return ""
 }
 
 func (peer *Peer) run(ctx context.Context) {
@@ -137,9 +145,10 @@ func (peer *Peer) run(ctx context.Context) {
 			err = peer.network.Put(node)
 		}
 		if err == nil {
+			peer.Config = node
 			break
 		}
-		log.Println("failed get", peer.Node, ":", err)
+		log.Println("failed get", peer.Address, ":", err)
 		select {
 		case <-ctx.Done():
 			return
@@ -149,20 +158,19 @@ func (peer *Peer) run(ctx context.Context) {
 	peer.Fetched = true
 	list, err := peer.fetchNodes(ctx)
 	if err != nil {
-		log.Println("failed get list of nodes from", peer.Node, ":", err)
+		log.Println("failed get list of nodes from", peer.Address, ":", err)
 		return
 	}
 	for _, node := range list {
 		err = peer.network.Put(node)
 		if err != nil {
-			log.Println("failed save node", node.Name, "from", peer.Node, ":", err)
+			log.Println("failed save node", node.Name, "from", peer.Address, ":", err)
 		}
 	}
 }
 
 func (peer *Peer) fetchConfig(ctx context.Context) (*network.Node, error) {
-	addr := strings.TrimSpace(strings.Split(peer.Subnet, "/")[0])
-	url := "http://" + addr + ":" + strconv.Itoa(network.CommunicationPort) + "/"
+	url := "http://" + peer.Address + ":" + strconv.Itoa(network.CommunicationPort) + "/"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -186,8 +194,7 @@ func (peer *Peer) fetchConfig(ctx context.Context) (*network.Node, error) {
 }
 
 func (peer *Peer) fetchNodes(ctx context.Context) ([]*network.Node, error) {
-	addr := strings.TrimSpace(strings.Split(peer.Subnet, "/")[0])
-	url := "http://" + addr + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/nodes"
+	url := "http://" + peer.Address + ":" + strconv.Itoa(network.CommunicationPort) + "/rpc/nodes"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

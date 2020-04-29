@@ -17,7 +17,7 @@ const (
 	nodesListInterval = 15 * time.Second
 )
 
-func runAPI(ctx context.Context, requests chan<- peerReq, ntw *network.Network) {
+func runAPI(ctx context.Context, ntw *network.Network) {
 	config, err := ntw.Read()
 	if err != nil {
 		log.Println(ntw.Name(), ": read config", err)
@@ -47,7 +47,7 @@ func runAPI(ctx context.Context, requests chan<- peerReq, ntw *network.Network) 
 		}
 	}
 	defer listener.Close()
-	router := setupRoutes(ctx, requests, ntw, config)
+	router := setupRoutes(ntw, config)
 	go func() {
 		<-ctx.Done()
 		listener.Close()
@@ -55,53 +55,8 @@ func runAPI(ctx context.Context, requests chan<- peerReq, ntw *network.Network) 
 	_ = router.RunListener(listener)
 }
 
-func setupRoutes(ctx context.Context, requests chan<- peerReq, ntw *network.Network, config *network.Config) *gin.Engine {
+func setupRoutes(ntw *network.Network, config *network.Config) *gin.Engine {
 	router := gin.Default()
-	router.POST("/rpc/watch", func(gctx *gin.Context) {
-		var params struct {
-			Subnet string `json:"subnet"`
-			Node   string `json:"node"`
-		}
-		if err := gctx.BindJSON(&params); err != nil {
-			return
-		}
-		if _, _, err := net.ParseCIDR(params.Subnet); err != nil {
-			log.Printf("incorrect subnet (%s) found: %v", params.Subnet, err)
-			gctx.AbortWithError(http.StatusBadRequest, err)
-			return
-		} else {
-			log.Println("detected new subnet", params.Subnet, "belongs to", params.Node)
-		}
-		select {
-		case requests <- peerReq{
-			Node:   params.Node,
-			Subnet: params.Subnet,
-			Add:    true,
-		}:
-		case <-ctx.Done():
-
-		}
-		gctx.AbortWithStatus(http.StatusNoContent)
-	})
-
-	router.POST("/rpc/forget", func(gctx *gin.Context) {
-		var params struct {
-			Node string `json:"node"`
-		}
-		if err := gctx.BindJSON(&params); err != nil {
-			return
-		}
-		select {
-		case requests <- peerReq{
-			Node: params.Node,
-			Add:  false,
-		}:
-		case <-ctx.Done():
-
-		}
-		gctx.AbortWithStatus(http.StatusNoContent)
-	})
-
 	router.GET("/rpc/nodes", func(gctx *gin.Context) {
 		var nodes nodeList
 		names, err := ntw.Nodes()

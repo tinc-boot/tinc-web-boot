@@ -6,7 +6,7 @@ export interface NetworkID {
 export interface PeerID {
     network: string
     node: string
-    subnet: string | null
+    address: string | null
 }
 
 

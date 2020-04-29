@@ -14,5 +14,5 @@ type NetworkID struct {
 type PeerID struct {
 	Network string `json:"network"`
 	Node    string `json:"node"`
-	Subnet  string `json:"subnet,omitempty"`
+	Address string `json:"address,omitempty"`
 }

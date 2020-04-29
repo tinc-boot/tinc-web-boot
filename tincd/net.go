@@ -7,10 +7,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 	"tinc-web-boot/network"
+	"tinc-web-boot/tincd/beacon"
 	"tinc-web-boot/utils"
+)
+
+const (
+	beaconAddress = "224.165.165.55:2655"
+	beaconText    = "tinc-web-boot i-am-here"
 )
 
 type netImpl struct {
@@ -101,6 +108,15 @@ func (impl *netImpl) run(global context.Context) error {
 		return err
 	}
 
+	config, err := impl.definition.Read()
+	if err != nil {
+		return err
+	}
+	interfaceName := config.Interface
+	if interfaceName == "" { // for darwin
+		interfaceName = config.Device[strings.LastIndex(config.Device, "/")+1:]
+	}
+
 	ctx, abort := context.WithCancel(global)
 	defer abort()
 
@@ -117,6 +133,7 @@ func (impl *netImpl) run(global context.Context) error {
 
 	var wg sync.WaitGroup
 
+	// run tinc service
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -127,14 +144,44 @@ func (impl *netImpl) run(global context.Context) error {
 		}
 	}()
 
+	// run http API
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer abort()
-		runAPI(ctx, peers, impl.definition)
+		runAPI(ctx, impl.definition)
 		log.Println(impl.definition.Name(), "api stopped")
 	}()
 
+	// run broadcaster (to find another nodes)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer abort()
+		beacons, err := beacon.Run(ctx, interfaceName, beaconAddress, beaconText)
+		if err != nil {
+			log.Println("failed start broadcaster:", err, "interface:", interfaceName)
+			return
+		}
+
+		filtered := beacon.FilterByContent(ctx, beacons, []byte(beaconText))
+	LOOP:
+		for update := range beacon.Discovery(ctx, filtered, beacon.DefaultKeepAlive*2) {
+			if update.Action == beacon.Updated {
+				continue
+			}
+			select {
+			case peers <- peerReq{
+				Address: update.Address,
+				Add:     update.Action == beacon.Discovered,
+			}:
+			case <-ctx.Done():
+				break LOOP
+			}
+		}
+	}()
+
+	// run peers checker
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -142,6 +189,7 @@ func (impl *netImpl) run(global context.Context) error {
 		impl.peers.Run(ctx, peers)
 	}()
 
+	// run periodic query of peers
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -149,6 +197,7 @@ func (impl *netImpl) run(global context.Context) error {
 		impl.queryActivePeers(ctx)
 	}()
 
+	// fix: change owner of log file and pid file to process runner
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
