@@ -186,8 +186,17 @@ func (srv *api) Peers(network string) ([]*shared.PeerInfo, error) {
 	}
 
 	var ans []*shared.PeerInfo
+	activePeers := ntw.Peers()
+
+	var indexedActivePeers = make(map[string]*tincd.Peer)
+	for _, peer := range activePeers {
+		if peer.Config != nil {
+			indexedActivePeers[peer.Config.Name] = peer
+		}
+	}
+
 	for _, name := range list {
-		info, active := ntw.Peer(name)
+		info, active := indexedActivePeers[name]
 		ans = append(ans, &shared.PeerInfo{
 			Name:   name,
 			Online: active,

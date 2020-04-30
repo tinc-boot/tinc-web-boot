@@ -39,6 +39,7 @@ type Main struct {
 	Start   start            `cmd:"start" help:"Start network"`
 	Stop    stop             `cmd:"stop" help:"Stop network"`
 	Peers   peers            `cmd:"peers" help:"List connected peers"`
+	Upgrade upgrade          `cmd:"upgrade" help:"Upgrade network"`
 	Version kong.VersionFlag `name:"version" help:"print version and exit"`
 }
 
@@ -106,6 +107,10 @@ func (m *Root) Run(global *globalContext) error {
 		return err
 	}
 	defer pool.Stop()
+
+	pool.Events().Sink(func(eventName string, payload interface{}) {
+		log.Printf("[TRACE] (%s) %+v", eventName, payload)
+	})
 
 	if m.Dev {
 		_, subnet, err := net.ParseCIDR(m.DevSubnet)

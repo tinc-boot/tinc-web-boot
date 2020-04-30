@@ -7,7 +7,9 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"tinc-web-boot/support/go/tincweb"
@@ -179,6 +181,36 @@ func (m *remove) Run(global *globalContext) error {
 	return nil
 }
 
+type upgrade struct {
+	baseParam
+	PublicAddress []string `short:"A" name:"public-address" env:"PUBLIC_ADDRESS" help:"Public node address"`
+	Network       string   `arg:"network" required:"yes"`
+}
+
+func (m *upgrade) Run(global *globalContext) error {
+	var params tincweb.Upgrade
+	for _, addr := range m.PublicAddress {
+		host, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return err
+		}
+		portV, err := strconv.ParseUint(port, 10, 16)
+		if err != nil {
+			return err
+		}
+		params.Address = append(params.Address, tincweb.Address{
+			Host: host,
+			Port: uint16(portV),
+		})
+	}
+
+	_, err := m.Client().Upgrade(global.ctx, m.Network, params)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type start struct {
 	baseParam
 	Network string `arg:"network" required:"yes"`
@@ -224,7 +256,8 @@ func (m *invite) Run(global *globalContext) error {
 
 type join struct {
 	baseParam
-	URL string `arg:"url" required:"yes"`
+	NoStart bool   `name:"no-start" env:"NO_START" help:"Do not start network automatically"`
+	URL     string `arg:"url" required:"yes"`
 }
 
 func (m *join) Run(global *globalContext) error {
@@ -287,6 +320,11 @@ func (m *join) Run(global *globalContext) error {
 	}
 	log.Println("SUCCESS!")
 	printNetwork(info)
+	if !m.NoStart {
+		log.Println("Starting...")
+		_, err = m.Client().Start(global.ctx, info.Name)
+		return err
+	}
 	return nil
 }
 
