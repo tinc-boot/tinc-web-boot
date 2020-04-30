@@ -54,7 +54,10 @@ LOOP:
 			for _, upd := range updates {
 				delete(cache, upd.Address)
 			}
-		case beacon := <-beacons:
+		case beacon, ok := <-beacons:
+			if !ok {
+				break LOOP
+			}
 			addr := beacon.Addr.String()
 			_, has := cache[addr]
 			cache[addr] = time.Now()
