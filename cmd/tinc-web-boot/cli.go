@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"io/ioutil"
 	"log"
 	"os"
 	"tinc-web-boot/cmd/tinc-web-boot/internal"
@@ -12,11 +13,18 @@ import (
 )
 
 type baseParam struct {
-	URL   string `name:"url" env:"URL" help:"API URL for tinc-web-boot" default:"http://127.0.0.1:8686/api"`
-	Token string `name:"token" env:"TOKEN" help:"Access token for API" default:"local"`
+	URL       string `name:"url" env:"URL" help:"API URL for tinc-web-boot" default:"http://127.0.0.1:8686/api"`
+	Token     string `name:"token" env:"TOKEN" help:"Access token for API" default:"local"`
+	TokenFile string `short:"f" long:"token-file" env:"TOKEN_FILE" description:"Token file" default:".tinc-web-boot"`
 }
 
 func (bp baseParam) Client() *tincweb.TincWebClient {
+	if bp.TokenFile != "" && (bp.Token == "" || bp.Token == "local") {
+		data, err := ioutil.ReadFile(bp.TokenFile)
+		if err == nil {
+			bp.Token = string(data)
+		}
+	}
 	return &tincweb.TincWebClient{BaseURL: bp.URL + "/" + bp.Token}
 }
 

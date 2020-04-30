@@ -8,3 +8,4 @@ node_modules
 web/bindata.go
 /tinc-web-boot
 .vagrant
+.tinc-web-boot
