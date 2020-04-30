@@ -77,3 +77,9 @@ type TincWebUI interface {
 	// Endpoints list to access web UI
 	Endpoints() ([]Endpoint, error)
 }
+
+// Operations for joining public network
+type TincWebMajordomo interface {
+	// Join public network if code matched. Will generate error if node subnet not matched
+	Join(network, code string, self *network.Node) (*Sharing, error)
+}

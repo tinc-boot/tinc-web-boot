@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"log"
 	"os"
+	"tinc-web-boot/cmd/tinc-web-boot/internal"
 	"tinc-web-boot/support/go/tincweb"
+	"tinc-web-boot/support/go/tincwebmajordomo"
 )
 
 type baseParam struct {
@@ -177,4 +180,56 @@ func (m *stop) Run(global *globalContext) error {
 	}
 	fmt.Println("name:", ntw.Name, "running:", ntw.Running)
 	return nil
+}
+
+type join struct {
+	baseParam
+	Code string `arg:"code" required:"yes"`
+}
+
+func (m *join) Run(global *globalContext) error {
+	var share internal.Share
+	if err := share.FromHex(m.Code); err != nil {
+		return err
+	}
+
+	ntw, err := m.Client().Create(global.ctx, share.Network, share.Subnet)
+	if err != nil {
+		return err
+	}
+
+	self, err := m.Client().Node(global.ctx, ntw.Name)
+	if err != nil {
+		return err
+	}
+
+	var mapped = &tincwebmajordomo.Node{
+		Name:      self.Name,
+		Subnet:    self.Subnet,
+		Port:      self.Port,
+		PublicKey: self.PublicKey,
+		Version:   self.Version,
+	}
+	for _, addr := range self.Address {
+		mapped.Address = append(mapped.Address, tincwebmajordomo.Address{
+			Host: addr.Host,
+			Port: addr.Port,
+		})
+	}
+
+	for _, proto := range []string{"https", "http"} {
+		for _, addr := range share.Addresses {
+			remoteClient := tincwebmajordomo.TincWebMajordomoClient{
+				BaseURL: fmt.Sprintf("%s://%d.%d.%d.%d:%d/api/", proto, addr[0], addr[1], addr[2], addr[3], share.Port),
+			}
+			_, err := remoteClient.Join(global.ctx, share.Network, share.Code, mapped)
+			if err != nil {
+				log.Println("[TRACE]:", err)
+			} else {
+				log.Println("SUCCESS!")
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("not connected")
 }

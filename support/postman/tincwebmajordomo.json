@@ -1,0 +1,49 @@
+{
+  "info": {
+    "_postman_id": "tinc-web-boot/web/shared@TincWebMajordomo",
+    "name": "TincWebMajordomo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "# TincWebMajordomo\n\nOperations for joining public network"
+  },
+  "item": [
+    {
+      "name": "Join",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWebMajordomo.Join\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api",
+            ""
+          ]
+        },
+        "description": "# TincWebMajordomo.Join\n\nJoin public network if code matched. Will generate error if node subnet not matched\n\n* Method: `TincWebMajordomo.Join`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | code | `string` |\n| 2 | self | `*Node` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
+      }
+    }
+  ]
+}

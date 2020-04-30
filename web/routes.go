@@ -254,23 +254,7 @@ func (srv *api) Share(network string) (*shared.Sharing, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodeNames, err := ntw.Definition().Nodes()
-	if err != nil {
-		return nil, err
-	}
-	var ans shared.Sharing
-	ans.Name = network
-
-	for _, name := range nodeNames {
-		node, err := ntw.Definition().Node(name)
-		if err != nil {
-			return nil, fmt.Errorf("get node %s: %w", name, err)
-		}
-		ans.Nodes = append(ans.Nodes, node)
-		ans.Subnet = node.Subnet
-	}
-
-	return &ans, nil
+	return NewShare(ntw.Definition())
 }
 
 func (srv *api) Upgrade(network string, update network.Upgrade) (*network.Node, error) {
@@ -295,4 +279,24 @@ func (srv *api) Node(network string) (*network.Node, error) {
 		return nil, err
 	}
 	return ntw.Definition().Node(cfg.Name)
+}
+
+func NewShare(ntw *network.Network) (*shared.Sharing, error) {
+	nodeNames, err := ntw.Nodes()
+	if err != nil {
+		return nil, err
+	}
+	var ans shared.Sharing
+	ans.Name = ntw.Name()
+
+	for _, name := range nodeNames {
+		node, err := ntw.Node(name)
+		if err != nil {
+			return nil, fmt.Errorf("get node %s: %w", name, err)
+		}
+		ans.Nodes = append(ans.Nodes, node)
+		ans.Subnet = node.Subnet
+	}
+
+	return &ans, nil
 }
