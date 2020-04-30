@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"os"
-	"strings"
 	"tinc-web-boot/support/go/tincweb"
 )
 
@@ -53,7 +52,8 @@ func (m *getNetwork) Run(global *globalContext) error {
 	if info.Config == nil {
 		return nil
 	}
-
+	fmt.Println("IP:", info.Config.IP)
+	fmt.Println("Mask:", info.Config.Mask)
 	fmt.Println("Node:", info.Config.Name)
 	fmt.Println("Device:", info.Config.Device)
 	fmt.Println("Device type:", info.Config.DeviceType)
@@ -138,10 +138,43 @@ func (m *peers) Run(global *globalContext) error {
 		if err != nil {
 			return err
 		}
+		var addr string
+		if peer.Status != nil {
+			addr = peer.Status.Address
+		}
+
 		table.Append([]string{
-			peer.Name, fmt.Sprint(peer.Online), strings.Split(info.Configuration.Subnet, "/")[0], fmt.Sprint(info.Configuration.Version),
+			peer.Name, fmt.Sprint(peer.Online), addr, fmt.Sprint(info.Configuration.Version),
 		})
 	}
 	table.Render()
+	return nil
+}
+
+type start struct {
+	baseParam
+	Network string `arg:"network" required:"yes"`
+}
+
+func (m *start) Run(global *globalContext) error {
+	ntw, err := m.Client().Start(global.ctx, m.Network)
+	if err != nil {
+		return err
+	}
+	fmt.Println("name:", ntw.Name, "running:", ntw.Running)
+	return nil
+}
+
+type stop struct {
+	baseParam
+	Network string `arg:"network" required:"yes"`
+}
+
+func (m *stop) Run(global *globalContext) error {
+	ntw, err := m.Client().Stop(global.ctx, m.Network)
+	if err != nil {
+		return err
+	}
+	fmt.Println("name:", ntw.Name, "running:", ntw.Running)
 	return nil
 }

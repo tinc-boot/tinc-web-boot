@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 	"tinc-web-boot/network"
 )
@@ -23,12 +22,7 @@ func runAPI(ctx context.Context, ntw *network.Network) {
 		log.Println(ntw.Name(), ": read config", err)
 		return
 	}
-	selfNode, err := ntw.Node(config.Name)
-	if err != nil {
-		log.Println(ntw.Name(), ": read self node", err)
-		return
-	}
-	bindingHost := strings.TrimSpace(strings.Split(selfNode.Subnet, "/")[0])
+	bindingHost := config.IP
 
 	lc := &net.ListenConfig{}
 	var listener net.Listener

@@ -2,6 +2,9 @@ package beacon
 
 import (
 	"context"
+	"fmt"
+	"golang.org/x/net/ipv4"
+	"log"
 	"net"
 	"time"
 )
@@ -41,22 +44,59 @@ func (cfg Broadcaster) Run() (<-chan Beacon, error) {
 		return nil, err
 	}
 
-	listener, err := net.ListenMulticastUDP("udp", iface, group)
+	addrs, err := iface.Addrs()
 	if err != nil {
 		return nil, err
+	}
+
+	var ip net.IP
+	for _, addr := range addrs {
+		if v, ok := addr.(*net.IPNet); ok && v.IP.To4() != nil {
+			ip = v.IP
+			break
+		}
+	}
+	if ip == nil {
+		return nil, fmt.Errorf("no IPv4 address on interface")
+	}
+	log.Println("[TRACE]", "binding broadcaster on", ip.String())
+
+	senderConn, err := net.ListenPacket("udp4", ip.String()+":0")
+	if err != nil {
+		return nil, err
+	}
+	senderPacket := ipv4.NewPacketConn(senderConn)
+
+	listener, err := net.ListenUDP("udp4", group)
+	if err != nil {
+		return nil, err
+	}
+
+	packet := ipv4.NewPacketConn(listener)
+	err = packet.JoinGroup(iface, group)
+	if err != nil {
+		listener.Close()
+		senderConn.Close()
+		return nil, err
+	}
+
+	err = senderPacket.SetMulticastLoopback(true)
+	if err != nil {
+		log.Println("[WARN]", "failed set loopback multicast:", err)
 	}
 
 	out := make(chan Beacon, 1)
 	go func() {
 		defer listener.Close()
+		defer senderConn.Close()
 		defer close(out)
-		cfg.run(listener, group, out)
+		cfg.run(packet, senderPacket, group, out)
 	}()
 
 	return out, nil
 }
 
-func (cfg Broadcaster) run(listener *net.UDPConn, groupAddr *net.UDPAddr, out chan<- Beacon) {
+func (cfg Broadcaster) run(listener, sender *ipv4.PacketConn, groupAddr *net.UDPAddr, out chan<- Beacon) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(cfg.context())
 	go func() {
@@ -65,7 +105,8 @@ func (cfg Broadcaster) run(listener *net.UDPConn, groupAddr *net.UDPAddr, out ch
 		defer timer.Stop()
 	LOOP:
 		for {
-			_, _ = listener.WriteToUDP(cfg.Beacon, groupAddr)
+			log.Println("[TRACE]", "sending beacon to:", groupAddr, "payload:", string(cfg.Beacon))
+			_, _ = sender.WriteTo(cfg.Beacon, nil, groupAddr)
 			select {
 			case <-ctx.Done():
 				break LOOP
@@ -77,15 +118,17 @@ func (cfg Broadcaster) run(listener *net.UDPConn, groupAddr *net.UDPAddr, out ch
 	}()
 
 	var buffer = make([]byte, cfg.bufferSize())
+	log.Println("[TRACE]", "buffer size:", len(buffer))
 LOOP:
 	for {
-		n, src, err := listener.ReadFrom(buffer[:])
+		n, _, src, err := listener.ReadFrom(buffer)
 		if err != nil {
 			break
 		}
 		if n == 0 {
 			continue
 		}
+		log.Println("[TRACE]", "beacon from:", src, "payload:", string(buffer[:n]))
 		cp := make([]byte, n)
 		copy(cp, buffer[:n])
 		select {

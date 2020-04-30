@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	beaconAddress = "224.165.165.55:2655"
+	beaconAddress = "224.0.0.251:2655"
 	beaconText    = "tinc-web-boot i-am-here"
 )
 
@@ -210,16 +211,18 @@ func (impl *netImpl) runBroadcaster(ctx context.Context, interfaceName string, p
 
 		return err
 	}
-	log.Println("broadcaster started on", interfaceName)
+	log.Println("[TRACE]", "broadcaster started on", interfaceName)
 	filtered := beacon.FilterByContent(ctx, beacons, []byte(beaconText))
 LOOP:
 	for update := range beacon.Discovery(ctx, filtered, beacon.DefaultKeepAlive*2) {
+		log.Println("[TRACE]", "found beacon from", update.Address, "action:", update.Action)
 		if update.Action == beacon.Updated {
 			continue
 		}
+		addr, _, _ := net.SplitHostPort(update.Address)
 		select {
 		case peers <- peerReq{
-			Address: update.Address,
+			Address: addr,
 			Add:     update.Action == beacon.Discovered,
 		}:
 		case <-ctx.Done():
