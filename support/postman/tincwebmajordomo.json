@@ -42,7 +42,7 @@
             ""
           ]
         },
-        "description": "# TincWebMajordomo.Join\n\nJoin public network if code matched. Will generate error if node subnet not matched\n\n* Method: `TincWebMajordomo.Join`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | code | `string` |\n| 2 | self | `*Node` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
+        "description": "# TincWebMajordomo.Join\n\nJoin public network if code matched. Will generate error if node subnet not matched\n\n* Method: `TincWebMajordomo.Join`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | self | `*Node` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
       }
     }
   ]

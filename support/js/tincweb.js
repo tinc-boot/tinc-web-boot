@@ -167,6 +167,18 @@ In some cases requires restart
         }));
     }
 
+    /**
+    Generate Majordomo request for easy-sharing
+    **/
+    async majordomo(network, lifetime){
+        return (await this.__call('Majordomo', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Majordomo",
+            "id" : this.__next_id(),
+            "params" : [network, lifetime]
+        }));
+    }
+
 
 
     __next_id() {

@@ -4,6 +4,7 @@ import (
 	"context"
 	client "github.com/reddec/jsonrpc2/client"
 	"sync/atomic"
+	"time"
 )
 
 //
@@ -157,5 +158,11 @@ In some cases requires restart
 */
 func (impl *TincWebClient) Upgrade(ctx context.Context, network string, update Upgrade) (reply *Node, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "TincWeb.Upgrade", atomic.AddUint64(&impl.sequence, 1), &reply, network, update)
+	return
+}
+
+// Generate Majordomo request for easy-sharing
+func (impl *TincWebClient) Majordomo(ctx context.Context, network string, lifetime time.Duration) (reply string, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "TincWeb.Majordomo", atomic.AddUint64(&impl.sequence, 1), &reply, network, lifetime)
 	return
 }

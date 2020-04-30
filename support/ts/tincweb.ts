@@ -70,6 +70,14 @@ export interface Upgrade {
 
 
 
+export enum Duration {
+    minDuration = -1 << 63,
+    maxDuration = 1<<63 - 1,
+    minDuration = -1 << 63,
+    maxDuration = 1<<63 - 1,
+    Nanosecond = 1,
+}
+
 
 // support stuff
 
@@ -376,6 +384,18 @@ In some cases requires restart
             "id" : this.__next_id(),
             "params" : [network, update]
         })) as Node;
+    }
+
+    /**
+    Generate Majordomo request for easy-sharing
+    **/
+    async majordomo(network: string, lifetime: Duration): Promise<string> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Majordomo",
+            "id" : this.__next_id(),
+            "params" : [network, lifetime]
+        })) as string;
     }
 
 

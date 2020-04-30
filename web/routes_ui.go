@@ -7,6 +7,7 @@ import (
 	"net"
 	"strconv"
 	"time"
+	"tinc-web-boot/tincd"
 	shared "tinc-web-boot/web/shared"
 )
 
@@ -14,13 +15,19 @@ type uiRoutes struct {
 	key           string
 	port          uint16
 	publicAddress []string
+	pool          *tincd.Tincd
+}
+
+func (srv *uiRoutes) issueToken(duration time.Duration, role string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iat":  time.Now().Add(duration),
+		"role": role,
+	})
+	return token.SignedString([]byte(srv.key))
 }
 
 func (srv *uiRoutes) IssueAccessToken(validDays uint) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iat": time.Now().Add(time.Duration(24*validDays) * time.Hour),
-	})
-	return token.SignedString([]byte(srv.key))
+	return srv.issueToken(time.Duration(24*validDays)*time.Hour, "admin")
 }
 
 func (srv *uiRoutes) Notify(title, message string) (bool, error) {

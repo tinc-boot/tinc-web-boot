@@ -15,6 +15,7 @@ Public Tinc-Web API (json-rpc 2.0)
 * [TincWeb.Share](#tincwebshare) - Share network and generate configuration file.
 * [TincWeb.Node](#tincwebnode) - Node definition in network (aka - self node)
 * [TincWeb.Upgrade](#tincwebupgrade) - Upgrade node parameters.
+* [TincWeb.Majordomo](#tincwebmajordomo) - Generate Majordomo request for easy-sharing
 
 
 
@@ -404,3 +405,33 @@ EOF
 | port | `uint16` |  |
 | address | `[]Address` |  |
 | device | `string` |  |
+
+## TincWeb.Majordomo
+
+Generate Majordomo request for easy-sharing
+
+* Method: `TincWeb.Majordomo`
+* Returns: `string`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | network | `string` |
+| 1 | lifetime | `Duration` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWeb.Majordomo",
+    "params" : []
+}
+EOF
+```
+### Duration
+
+```go
+type Duration int64
+```

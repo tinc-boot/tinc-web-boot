@@ -196,12 +196,12 @@ export class TincWebMajordomo {
     /**
     Join public network if code matched. Will generate error if node subnet not matched
     **/
-    async join(network: string, code: string, self: Node): Promise<Sharing> {
+    async join(network: string, self: Node): Promise<Sharing> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "TincWebMajordomo.Join",
             "id" : this.__next_id(),
-            "params" : [network, code, self]
+            "params" : [network, self]
         })) as Sharing;
     }
 

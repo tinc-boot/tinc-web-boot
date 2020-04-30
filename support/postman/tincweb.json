@@ -473,6 +473,45 @@
         },
         "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
       }
+    },
+    {
+      "name": "Majordomo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Majordomo\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api",
+            ""
+          ]
+        },
+        "description": "# TincWeb.Majordomo\n\nGenerate Majordomo request for easy-sharing\n\n* Method: `TincWeb.Majordomo`\n* Returns: `string`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | lifetime | `Duration` |\n\n### Duration\n\n```go\ntype Duration int64\n```\n\n"
+      }
     }
   ]
 }

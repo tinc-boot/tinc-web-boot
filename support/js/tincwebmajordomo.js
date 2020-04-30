@@ -23,12 +23,12 @@ export class TincWebMajordomo {
     /**
     Join public network if code matched. Will generate error if node subnet not matched
     **/
-    async join(network, code, self){
+    async join(network, self){
         return (await this.__call('Join', {
             "jsonrpc" : "2.0",
             "method" : "TincWebMajordomo.Join",
             "id" : this.__next_id(),
-            "params" : [network, code, self]
+            "params" : [network, self]
         }));
     }
 

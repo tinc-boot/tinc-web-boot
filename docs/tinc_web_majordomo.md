@@ -19,8 +19,7 @@ Join public network if code matched. Will generate error if node subnet not matc
 | Position | Name | Type |
 |----------|------|------|
 | 0 | network | `string` |
-| 1 | code | `string` |
-| 2 | self | `*Node` |
+| 1 | self | `*Node` |
 
 ```bash
 curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF

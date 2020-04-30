@@ -2,45 +2,22 @@ package web
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/reddec/jsonrpc2"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
-	"tinc-web-boot/web/internal"
 	"tinc-web-boot/web/shared"
 )
 
-func ExportMajordomo(router gin.IRouter, pool *tincd.Tincd, code string, allowedNetworks ...string) {
-	var jsonRouter jsonrpc2.Router
-	internal.RegisterTincWebMajordomo(&jsonRouter, NewMajordomo(pool, code, allowedNetworks))
-	router.POST("/", gin.WrapH(jsonrpc2.HandlerRest(&jsonRouter)))
-}
-
-func NewMajordomo(pool *tincd.Tincd, code string, allowedNetworks []string) *majordomoImpl {
-	al := make(map[string]bool)
-	for _, a := range allowedNetworks {
-		al[a] = true
-	}
+func NewMajordomo(pool *tincd.Tincd) *majordomoImpl {
 	return &majordomoImpl{
-		pool:    pool,
-		allowed: al,
-		code:    code,
+		pool: pool,
 	}
 }
 
 type majordomoImpl struct {
-	pool    *tincd.Tincd
-	allowed map[string]bool
-	code    string
+	pool *tincd.Tincd
 }
 
-func (srv *majordomoImpl) Join(network, code string, self *network.Node) (*shared.Sharing, error) {
-	if !srv.allowed[network] {
-		return nil, fmt.Errorf("unknown or un-exported network %s", network)
-	}
-	if code != srv.code {
-		return nil, fmt.Errorf("invalid code")
-	}
+func (srv *majordomoImpl) Join(network string, self *network.Node) (*shared.Sharing, error) {
 	ntw, err := srv.pool.Get(network)
 	if err != nil {
 		return nil, err

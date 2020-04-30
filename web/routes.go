@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
 	"tinc-web-boot/web/internal"
@@ -58,15 +59,22 @@ func (cfg Config) New(pool *tincd.Tincd) (*gin.Engine, *uiRoutes) {
 		key:           cfg.AuthKey,
 		port:          cfg.LocalUIPort,
 		publicAddress: cfg.PublicAddresses,
+		pool:          pool,
 	}
 
-	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool})
+	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool, publicAddress: cfg.PublicAddresses, key: cfg.AuthKey})
 	internal.RegisterTincWebUI(&jsonRouter, uiApp)
 
 	streamer := events.NewWebsocketStream()
 	pool.Events().Sink(streamer.Feed)
 
 	router.StaticFS("/static", AssetFile())
+
+	var majordomoRouter jsonrpc2.Router
+	internal.RegisterTincWebMajordomo(&majordomoRouter, NewMajordomo(pool))
+
+	majordomo := router.Group("/majordomo/:token", cfg.majordomoOnly())
+	majordomo.POST("", gin.WrapH(jsonrpc2.HandlerRest(&majordomoRouter)))
 
 	api := router.Group("/api/:token/", cfg.authorizedOnly())
 
@@ -104,8 +112,39 @@ func (cfg Config) authorizedOnly() gin.HandlerFunc {
 	}
 }
 
+func (cfg Config) majordomoOnly() gin.HandlerFunc {
+	return func(gctx *gin.Context) {
+		token := gctx.Param("token")
+		claims, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(cfg.AuthKey), nil
+		})
+		if err != nil {
+			log.Println("[guard]", "check token failed:", err)
+			gctx.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		mp, ok := claims.Claims.(jwt.MapClaims)
+		if !ok {
+			log.Println("[guard]", "claims not a map")
+			gctx.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		if v, ok := mp["role"].(string); !ok || v != "majordomo" {
+			log.Println("[guard]", "wrong role")
+			gctx.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		gctx.Next()
+	}
+}
+
 type api struct {
-	pool *tincd.Tincd
+	pool          *tincd.Tincd
+	key           string
+	publicAddress []string
 }
 
 func (srv *api) Networks() ([]*shared.Network, error) {
@@ -279,6 +318,33 @@ func (srv *api) Node(network string) (*network.Node, error) {
 		return nil, err
 	}
 	return ntw.Definition().Node(cfg.Name)
+}
+
+func (srv *api) Majordomo(network string, lifetime time.Duration) (string, error) {
+	if len(srv.publicAddress) == 0 {
+		return "", fmt.Errorf("no public addreses defined")
+	}
+	ntw, err := srv.pool.Get(network)
+	if err != nil {
+		return "", err
+	}
+	self, err := ntw.Definition().Self()
+	if err != nil {
+		return "", err
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iat":     time.Now().Add(lifetime),
+		"role":    "majordomo",
+		"subnet":  self.Subnet,
+		"network": network,
+	})
+	tok, err := token.SignedString([]byte(srv.key))
+	if err != nil {
+		return "", err
+	}
+
+	return "http://" + srv.publicAddress[0] + "/majordomo/" + tok, nil
 }
 
 func NewShare(ntw *network.Network) (*shared.Sharing, error) {

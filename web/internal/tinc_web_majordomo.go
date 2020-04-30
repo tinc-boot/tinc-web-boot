@@ -12,19 +12,18 @@ func RegisterTincWebMajordomo(router *jsonrpc2.Router, wrap shared.TincWebMajord
 	router.RegisterFunc("TincWebMajordomo.Join", func(params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string        `json:"network"`
-			Arg1 string        `json:"code"`
-			Arg2 *network.Node `json:"self"`
+			Arg1 *network.Node `json:"self"`
 		}
 		var err error
 		if positional {
-			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1, &args.Arg2)
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
 		} else {
 			err = json.Unmarshal(params, &args)
 		}
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Join(args.Arg0, args.Arg1, args.Arg2)
+		return wrap.Join(args.Arg0, args.Arg1)
 	})
 
 	return []string{"TincWebMajordomo.Join"}

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"io/ioutil"
 	"log"
 	"os"
-	"tinc-web-boot/cmd/tinc-web-boot/internal"
+	"strings"
+	"time"
 	"tinc-web-boot/support/go/tincweb"
 	"tinc-web-boot/support/go/tincwebmajordomo"
 )
@@ -58,23 +60,7 @@ func (m *getNetwork) Run(global *globalContext) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Name:", info.Name)
-	fmt.Println("Running:", info.Running)
-	if info.Config == nil {
-		return nil
-	}
-	fmt.Println("IP:", info.Config.IP)
-	fmt.Println("Mask:", info.Config.Mask)
-	fmt.Println("Node:", info.Config.Name)
-	fmt.Println("Device:", info.Config.Device)
-	fmt.Println("Device type:", info.Config.DeviceType)
-	fmt.Println("Interface:", info.Config.Interface)
-	fmt.Println("Port:", info.Config.Port)
-	fmt.Println("Mode:", info.Config.Mode)
-	fmt.Println("Autostart:", info.Config.AutoStart)
-	for _, c := range info.Config.ConnectTo {
-		fmt.Println("Connect to:", c)
-	}
+	printNetwork(info)
 	return nil
 }
 
@@ -162,6 +148,37 @@ func (m *peers) Run(global *globalContext) error {
 	return nil
 }
 
+type create struct {
+	baseParam
+	Network string `arg:"network" required:"yes"`
+	Subnet  string `arg:"subnet" required:"yes"`
+}
+
+func (m *create) Run(global *globalContext) error {
+	info, err := m.Client().Create(global.ctx, m.Network, m.Subnet)
+	if err != nil {
+		return err
+	}
+	printNetwork(info)
+	return nil
+}
+
+type remove struct {
+	baseParam
+	Network string `arg:"network" required:"yes"`
+}
+
+func (m *remove) Run(global *globalContext) error {
+	ok, err := m.Client().Remove(global.ctx, m.Network)
+	if err != nil {
+		return err
+	}
+	if ok {
+		fmt.Println("removed")
+	}
+	return nil
+}
+
 type start struct {
 	baseParam
 	Network string `arg:"network" required:"yes"`
@@ -190,16 +207,46 @@ func (m *stop) Run(global *globalContext) error {
 	return nil
 }
 
+type invite struct {
+	baseParam
+	Lifetime time.Duration `name:"lifetime" env:"LIFETIME" help:"How long invitation will work" default:"1h"`
+	Network  string        `arg:"network" required:"yes"`
+}
+
+func (m *invite) Run(global *globalContext) error {
+	link, err := m.Client().Majordomo(global.ctx, m.Network, m.Lifetime)
+	if err != nil {
+		return err
+	}
+	fmt.Println(link)
+	return nil
+}
+
 type join struct {
 	baseParam
-	Code string `arg:"code" required:"yes"`
+	URL string `arg:"url" required:"yes"`
 }
 
 func (m *join) Run(global *globalContext) error {
-	var share internal.Share
-	if err := share.FromHex(m.Code); err != nil {
+	parts := strings.Split(m.URL, "/")
+	token := parts[len(parts)-1]
+	data := strings.Split(token, ".")[1]
+	bindata, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
 		return err
 	}
+
+	var share struct {
+		Network string `json:"network"`
+		Subnet  string `json:"subnet"`
+	}
+
+	err = json.Unmarshal(bindata, &share)
+	if err != nil {
+		return err
+	}
+
+	remote := &tincwebmajordomo.TincWebMajordomoClient{BaseURL: m.URL}
 
 	ntw, err := m.Client().Create(global.ctx, share.Network, share.Subnet)
 	if err != nil {
@@ -224,20 +271,49 @@ func (m *join) Run(global *globalContext) error {
 			Port: addr.Port,
 		})
 	}
-
-	for _, proto := range []string{"https", "http"} {
-		for _, addr := range share.Addresses {
-			remoteClient := tincwebmajordomo.TincWebMajordomoClient{
-				BaseURL: fmt.Sprintf("%s://%d.%d.%d.%d:%d/api/", proto, addr[0], addr[1], addr[2], addr[3], share.Port),
-			}
-			_, err := remoteClient.Join(global.ctx, share.Network, share.Code, mapped)
-			if err != nil {
-				log.Println("[TRACE]:", err)
-			} else {
-				log.Println("SUCCESS!")
-				return nil
-			}
-		}
+	shared, err := remote.Join(global.ctx, share.Network, mapped)
+	if err != nil {
+		return err
 	}
-	return fmt.Errorf("not connected")
+	var mappedShared tincweb.Sharing
+	err = quickRemap(&mappedShared, shared)
+	if err != nil {
+		return err
+	}
+
+	info, err := m.Client().Import(global.ctx, mappedShared)
+	if err != nil {
+		return err
+	}
+	log.Println("SUCCESS!")
+	printNetwork(info)
+	return nil
+}
+
+func printNetwork(info *tincweb.Network) {
+	fmt.Println("Name:", info.Name)
+	fmt.Println("Running:", info.Running)
+	if info.Config == nil {
+		return
+	}
+	fmt.Println("IP:", info.Config.IP)
+	fmt.Println("Mask:", info.Config.Mask)
+	fmt.Println("Node:", info.Config.Name)
+	fmt.Println("Device:", info.Config.Device)
+	fmt.Println("Device type:", info.Config.DeviceType)
+	fmt.Println("Interface:", info.Config.Interface)
+	fmt.Println("Port:", info.Config.Port)
+	fmt.Println("Mode:", info.Config.Mode)
+	fmt.Println("Autostart:", info.Config.AutoStart)
+	for _, c := range info.Config.ConnectTo {
+		fmt.Println("Connect to:", c)
+	}
+}
+
+func quickRemap(dst interface{}, src interface{}) error {
+	data, err := json.Marshal(src)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, dst)
 }

@@ -2,7 +2,23 @@ from aiohttp import client
 
 from dataclasses import dataclass
 
+from enum import Enum
 from typing import Any, List, Optional
+
+
+class Duration(Enum):
+    MIN_DURATION = -1 << 63
+    MAX_DURATION = 1<<63 - 1
+    MIN_DURATION = -1 << 63
+    MAX_DURATION = 1<<63 - 1
+    NANOSECOND = 1
+
+    def to_json(self) -> int:
+        return self.value
+
+    @staticmethod
+    def from_json(payload: int) -> 'Duration':
+        return Duration(payload)
 
 
 
@@ -437,3 +453,19 @@ In some cases requires restart
         if 'error' in payload:
             raise TincWebError.from_json('upgrade', payload['error'])
         return Node.from_json(payload['result'])
+
+    async def majordomo(self, network: str, lifetime: Duration) -> str:
+        """
+        Generate Majordomo request for easy-sharing
+        """
+        response = await self.__request('POST', self.__url, json={
+            "jsonrpc": "2.0",
+            "method": "TincWeb.Majordomo",
+            "id": self.__next_id(),
+            "params": [network, lifetime.to_json(), ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise TincWebError.from_json('majordomo', payload['error'])
+        return payload['result']

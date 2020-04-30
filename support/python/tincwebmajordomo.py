@@ -109,7 +109,7 @@ class TincWebMajordomoClient:
         self.__id += 1
         return self.__id
 
-    async def join(self, network: str, code: str, self: Node) -> Sharing:
+    async def join(self, network: str, self: Node) -> Sharing:
         """
         Join public network if code matched. Will generate error if node subnet not matched
         """
@@ -117,7 +117,7 @@ class TincWebMajordomoClient:
             "jsonrpc": "2.0",
             "method": "TincWebMajordomo.Join",
             "id": self.__next_id(),
-            "params": [network, code, self.to_json(), ]
+            "params": [network, self.to_json(), ]
         })
         assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
         payload = await response.json()

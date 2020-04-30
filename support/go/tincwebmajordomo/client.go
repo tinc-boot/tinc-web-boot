@@ -39,7 +39,7 @@ type TincWebMajordomoClient struct {
 }
 
 // Join public network if code matched. Will generate error if node subnet not matched
-func (impl *TincWebMajordomoClient) Join(ctx context.Context, network string, code string, self *Node) (reply *Sharing, err error) {
-	err = client.CallHTTP(ctx, impl.BaseURL, "TincWebMajordomo.Join", atomic.AddUint64(&impl.sequence, 1), &reply, network, code, self)
+func (impl *TincWebMajordomoClient) Join(ctx context.Context, network string, self *Node) (reply *Sharing, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "TincWebMajordomo.Join", atomic.AddUint64(&impl.sequence, 1), &reply, network, self)
 	return
 }

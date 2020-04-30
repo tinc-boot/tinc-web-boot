@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"time"
 	"tinc-web-boot/network"
 	"tinc-web-boot/tincd"
 )
@@ -53,6 +54,8 @@ type TincWeb interface {
 	// Upgrade node parameters.
 	// In some cases requires restart
 	Upgrade(network string, update network.Upgrade) (*network.Node, error)
+	// Generate Majordomo request for easy-sharing
+	Majordomo(network string, lifetime time.Duration) (string, error)
 }
 
 type EndpointKind string
@@ -81,5 +84,5 @@ type TincWebUI interface {
 // Operations for joining public network
 type TincWebMajordomo interface {
 	// Join public network if code matched. Will generate error if node subnet not matched
-	Join(network, code string, self *network.Node) (*Sharing, error)
+	Join(network string, self *network.Node) (*Sharing, error)
 }
