@@ -12,7 +12,7 @@ import (
 const scriptSuffix = ""
 
 const tincUpTxt = `#!/bin/sh
-ifconfig $INTERFACE {{.Subnet}}
+ifconfig $INTERFACE {{.IP}}/{{.Mask}}
 `
 
 const tincDownText = `#!/bin/sh

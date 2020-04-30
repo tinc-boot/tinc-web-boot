@@ -11,6 +11,7 @@ type Config struct {
 	AutoStart  bool     `json:"autostart"`
 	Mode       string   `json:"mode"`
 	IP         string   `json:"ip"`
+	Mask       int      `json:"mask"`
 	DeviceType string   `json:"deviceType,omitempty"`
 	Device     string   `json:"device,omitempty"`
 	ConnectTo  []string `json:"connectTo,omitempty"`

@@ -221,15 +221,11 @@ func (network *Network) Prepare(ctx context.Context, tincBin string) error {
 	if err != nil {
 		return err
 	}
-	selfNode, err := network.Node(config.Name)
-	if err != nil {
-		return err
-	}
 
-	if err := network.saveScript("tinc-up", tincUp(selfNode)); err != nil {
+	if err := network.saveScript("tinc-up", tincUp(config)); err != nil {
 		return err
 	}
-	if err := network.saveScript("tinc-down", tincDown(selfNode)); err != nil {
+	if err := network.saveScript("tinc-down", tincDown(config)); err != nil {
 		return err
 	}
 
@@ -289,8 +285,9 @@ func (network *Network) defineConfiguration(subnet *net.IPNet) error {
 	if network.IsDefined() {
 		return nil
 	}
-	if bits, _ := subnet.Mask.Size(); bits != 32 {
-		return fmt.Errorf("currently supported only IPv4 subnets")
+	mask, bits := subnet.Mask.Size()
+	if bits != 32 {
+		return fmt.Errorf("currently supported only IPv4 subnets (%d bits) but requested %d bits", 32, bits)
 	}
 	hostname, _ := os.Hostname()
 	suffix := utils.RandStringRunesCustom(6, suffixRunes)
@@ -303,6 +300,7 @@ func (network *Network) defineConfiguration(subnet *net.IPNet) error {
 		AutoStart: false,
 		Mode:      "switch",
 		IP:        selfIP.String(),
+		Mask:      mask,
 	}
 
 	if err := network.beforeConfigure(config); err != nil {

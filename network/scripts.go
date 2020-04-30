@@ -10,12 +10,12 @@ var (
 	tincDownTpl = template.Must(template.New("").Parse(tincDownText))
 )
 
-func tincUp(selfNode *Node) string {
-	return mustRender(tincUpTpl, selfNode)
+func tincUp(config *Config) string {
+	return mustRender(tincUpTpl, config)
 }
 
-func tincDown(selfNode *Node) string {
-	return mustRender(tincDownTpl, selfNode)
+func tincDown(config *Config) string {
+	return mustRender(tincDownTpl, config)
 }
 
 func mustRender(tpl *template.Template, params interface{}) string {

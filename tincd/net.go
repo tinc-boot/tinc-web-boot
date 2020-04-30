@@ -158,25 +158,15 @@ func (impl *netImpl) run(global context.Context) error {
 	go func() {
 		defer wg.Done()
 		defer abort()
-		beacons, err := beacon.Run(ctx, interfaceName, beaconAddress, beaconText)
-		if err != nil {
-			log.Println("failed start broadcaster:", err, "interface:", interfaceName)
-			return
-		}
-
-		filtered := beacon.FilterByContent(ctx, beacons, []byte(beaconText))
-	LOOP:
-		for update := range beacon.Discovery(ctx, filtered, beacon.DefaultKeepAlive*2) {
-			if update.Action == beacon.Updated {
-				continue
+		for {
+			err := impl.runBroadcaster(ctx, interfaceName, peers)
+			if err != nil {
+				log.Println("failed start broadcaster:", err, "interface:", interfaceName)
 			}
 			select {
-			case peers <- peerReq{
-				Address: update.Address,
-				Add:     update.Action == beacon.Discovered,
-			}:
 			case <-ctx.Done():
-				break LOOP
+				return
+			case <-time.After(1 * time.Second):
 			}
 		}
 	}()
@@ -212,6 +202,31 @@ func (impl *netImpl) run(global context.Context) error {
 	impl.events.Started.Emit(network.NetworkID{Name: impl.definition.Name()})
 	wg.Wait()
 	return ctx.Err()
+}
+
+func (impl *netImpl) runBroadcaster(ctx context.Context, interfaceName string, peers chan<- peerReq) error {
+	beacons, err := beacon.Run(ctx, interfaceName, beaconAddress, beaconText)
+	if err != nil {
+
+		return err
+	}
+	log.Println("broadcaster started on", interfaceName)
+	filtered := beacon.FilterByContent(ctx, beacons, []byte(beaconText))
+LOOP:
+	for update := range beacon.Discovery(ctx, filtered, beacon.DefaultKeepAlive*2) {
+		if update.Action == beacon.Updated {
+			continue
+		}
+		select {
+		case peers <- peerReq{
+			Address: update.Address,
+			Add:     update.Action == beacon.Discovered,
+		}:
+		case <-ctx.Done():
+			break LOOP
+		}
+	}
+	return nil
 }
 
 func (impl *netImpl) queryActivePeers(ctx context.Context) {

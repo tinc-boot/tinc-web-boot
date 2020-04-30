@@ -61,7 +61,7 @@ func (cfg Broadcaster) run(listener *net.UDPConn, groupAddr *net.UDPAddr, out ch
 	ctx, cancel := context.WithCancel(cfg.context())
 	go func() {
 		defer close(done)
-		timer := time.NewTicker(cfg.Interval)
+		timer := time.NewTicker(cfg.interval())
 		defer timer.Stop()
 	LOOP:
 		for {
