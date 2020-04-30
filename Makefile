@@ -7,6 +7,9 @@ tools: bindata
 	GO111MODULE=off go get -v github.com/reddec/struct-view/cmd/events-gen
 	GO111MODULE=off go get -u -v github.com/reddec/jsonrpc2/cmd/...
 
+generate: tools
+	grep -Ril '//go:generate' --include '*.go' . | xargs -n 1 go generate
+
 ui:
 	cd web/ui && npm i && npm run build
 

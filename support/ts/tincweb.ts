@@ -23,6 +23,7 @@ export interface Config {
     autostart: boolean
     mode: string
     ip: string
+    mask: number
     deviceType: string | null
     device: string | null
     connectTo: Array<string> | null
@@ -36,9 +37,9 @@ export interface PeerInfo {
 }
 
 export interface Peer {
-    node: string
-    subnet: string
+    address: string
     fetched: boolean
+    config: Node | null
 }
 
 export interface Node {
@@ -57,11 +58,11 @@ export interface Address {
 
 export interface Sharing {
     name: string
+    subnet: string
     node: Array<Node> | null
 }
 
 export interface Upgrade {
-    subnet: string | null
     port: number | null
     address: Array<Address> | null
     device: string | null

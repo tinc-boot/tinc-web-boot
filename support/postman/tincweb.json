@@ -354,7 +354,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Import\n\nImport another tinc-web network configuration file.\nIt means let nodes defined in config join to the network.\nReturn created (or used) network with full configuration\n\n* Method: `TincWeb.Import`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | sharing | `Sharing` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
+        "description": "# TincWeb.Import\n\nImport another tinc-web network configuration file.\nIt means let nodes defined in config join to the network.\nReturn created (or used) network with full configuration\n\n* Method: `TincWeb.Import`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | sharing | `Sharing` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
       }
     },
     {
@@ -393,7 +393,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Share\n\nShare network and generate configuration file.\n\n* Method: `TincWeb.Share`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
+        "description": "# TincWeb.Share\n\nShare network and generate configuration file.\n\n* Method: `TincWeb.Share`\n* Returns: `*Sharing`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Sharing\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| node | `[]*network.Node` |  |\n\n"
       }
     },
     {
@@ -471,7 +471,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
+        "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
       }
     }
   ]

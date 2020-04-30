@@ -294,6 +294,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | name | `string` |  |
+| subnet | `string` |  |
 | node | `[]*network.Node` |  |
 
 ## TincWeb.Share
@@ -324,6 +325,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | name | `string` |  |
+| subnet | `string` |  |
 | node | `[]*network.Node` |  |
 
 ## TincWeb.Node
@@ -399,7 +401,6 @@ EOF
 
 | Json | Type | Comment |
 |------|------|---------|
-| subnet | `string` |  |
 | port | `uint16` |  |
 | address | `[]Address` |  |
 | device | `string` |  |

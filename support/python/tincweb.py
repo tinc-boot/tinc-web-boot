@@ -36,6 +36,7 @@ class Config:
     auto_start: 'bool'
     mode: 'str'
     ip: 'str'
+    mask: 'int'
     device_type: 'Optional[str]'
     device: 'Optional[str]'
     connect_to: 'Optional[List[str]]'
@@ -48,6 +49,7 @@ class Config:
             "autostart": self.auto_start,
             "mode": self.mode,
             "ip": self.ip,
+            "mask": self.mask,
             "deviceType": self.device_type,
             "device": self.device,
             "connectTo": self.connect_to,
@@ -62,6 +64,7 @@ class Config:
                 auto_start=payload['autostart'],
                 mode=payload['mode'],
                 ip=payload['ip'],
+                mask=payload['mask'],
                 device_type=payload['deviceType'],
                 device=payload['device'],
                 connect_to=payload['connectTo'] or [],
@@ -95,23 +98,23 @@ class PeerInfo:
 
 @dataclass
 class Peer:
-    node: 'str'
-    subnet: 'str'
+    address: 'str'
     fetched: 'bool'
+    config: 'Optional[Node]'
 
     def to_json(self) -> dict:
         return {
-            "node": self.node,
-            "subnet": self.subnet,
+            "address": self.address,
             "fetched": self.fetched,
+            "config": self.config.to_json(),
         }
 
     @staticmethod
     def from_json(payload: dict) -> 'Peer':
         return Peer(
-                node=payload['node'],
-                subnet=payload['subnet'],
+                address=payload['address'],
                 fetched=payload['fetched'],
+                config=Node.from_json(payload['config']),
         )
 
 
@@ -168,11 +171,13 @@ class Address:
 @dataclass
 class Sharing:
     name: 'str'
+    subnet: 'str'
     nodes: 'Optional[List[Node]]'
 
     def to_json(self) -> dict:
         return {
             "name": self.name,
+            "subnet": self.subnet,
             "node": [x.to_json() for x in self.nodes],
         }
 
@@ -180,20 +185,19 @@ class Sharing:
     def from_json(payload: dict) -> 'Sharing':
         return Sharing(
                 name=payload['name'],
+                subnet=payload['subnet'],
                 nodes=[Node.from_json(x) for x in (payload['node'] or [])],
         )
 
 
 @dataclass
 class Upgrade:
-    subnet: 'Optional[str]'
     port: 'Optional[int]'
     address: 'Optional[List[Address]]'
     device: 'Optional[str]'
 
     def to_json(self) -> dict:
         return {
-            "subnet": self.subnet,
             "port": self.port,
             "address": [x.to_json() for x in self.address],
             "device": self.device,
@@ -202,7 +206,6 @@ class Upgrade:
     @staticmethod
     def from_json(payload: dict) -> 'Upgrade':
         return Upgrade(
-                subnet=payload['subnet'],
                 port=payload['port'],
                 address=[Address.from_json(x) for x in (payload['address'] or [])],
                 device=payload['device'],

@@ -21,6 +21,7 @@ type Config struct {
 	AutoStart  bool     `json:"autostart"`
 	Mode       string   `json:"mode"`
 	IP         string   `json:"ip"`
+	Mask       int      `json:"mask"`
 	DeviceType string   `json:"deviceType"`
 	Device     string   `json:"device"`
 	ConnectTo  []string `json:"connectTo"`
@@ -36,9 +37,9 @@ type PeerInfo struct {
 
 //
 type Peer struct {
-	Node    string `json:"node"`
-	Subnet  string `json:"subnet"`
+	Address string `json:"address"`
 	Fetched bool   `json:"fetched"`
+	Config  *Node  `json:"config"`
 }
 
 //
@@ -59,13 +60,13 @@ type Address struct {
 
 //
 type Sharing struct {
-	Name  string  `json:"name"`
-	Nodes []*Node `json:"node"`
+	Name   string  `json:"name"`
+	Subnet string  `json:"subnet"`
+	Nodes  []*Node `json:"node"`
 }
 
 //
 type Upgrade struct {
-	Subnet  string    `json:"subnet"`
 	Port    uint16    `json:"port"`
 	Address []Address `json:"address"`
 	Device  string    `json:"device"`
