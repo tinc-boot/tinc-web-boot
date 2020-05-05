@@ -7,6 +7,23 @@ tinc-boot nodes are capable with the tinc-web-boot nodes.
 
 Status: **draft**
 
+
+```
+
++------+                              +--------+ <- UDP mcast +
+| UI   | <-- JSON-RPC 2.0 / HTTP ---> | Server | <--- HTTP --+|
++------+                              +--------+             ||
+                                          ||                 ||
+                                      +---------------+      ||
+                                      | TINCD         |      ||
+                                      | (per network) |      ||
+                                      +---------------+      ||
+                                          ||                 VV
+                                      +-------------------------+
+                                      | TAP interface           |
+                                      +-------------------------+
+```
+
 ## Features
 
 | Status | Description |
