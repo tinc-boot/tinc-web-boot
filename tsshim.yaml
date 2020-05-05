@@ -1,0 +1,6 @@
+---
+qual: "time@Time"
+content: "type Time = string; // RFC3339"
+---
+qual: "time@Duration"
+content: "type Duration = string; // suffixes: ns, us, ms, s, m, h"

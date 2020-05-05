@@ -70,13 +70,7 @@ export interface Upgrade {
 
 
 
-export enum Duration {
-    minDuration = -1 << 63,
-    maxDuration = 1<<63 - 1,
-    minDuration = -1 << 63,
-    maxDuration = 1<<63 - 1,
-    Nanosecond = 1,
-}
+export type Duration = string; // suffixes: ns, us, ms, s, m, h (!!!!)
 
 
 // support stuff

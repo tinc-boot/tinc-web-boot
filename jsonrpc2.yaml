@@ -5,6 +5,7 @@ wrapper: "Register{{.TypeName}}"
 python: 'support/python/{{.Generator.Name | replace "." "/" | lower}}.py'
 js:  'support/js/{{.Generator.Name | lower }}.js'
 ts:  'support/ts/{{.Generator.Name | lower }}.ts'
+ts_shim_file: "tsshim.yaml"
 doc: 'docs/{{.Generator.Name | snakecase | replace "." "" }}.md'
 output: "./{{.Generator.TypeName | snakecase}}.go"
 go: 'support/go/{{.Generator.Name | replace "." "/" | lower}}/client.go'
