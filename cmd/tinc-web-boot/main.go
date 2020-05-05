@@ -72,6 +72,8 @@ func main() {
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		if err := cli.dumpConfig(configFile); err != nil {
 			log.Println("[WARN]", "failed dump config file", configFile, ":", err)
+		} else {
+			_ = network.ApplyOwnerOfSudoUser(configFile)
 		}
 	}
 	gctx, closer := context.WithCancel(context.Background())
