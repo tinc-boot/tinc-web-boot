@@ -16,6 +16,10 @@ export interface Endpoint {
     kind: EndpointKind
 }
 
+export interface Config {
+    binding: string
+}
+
 
 
 export enum EndpointKind {
@@ -218,6 +222,18 @@ export class TincWebUI {
             "id" : this.__next_id(),
             "params" : []
         })) as Array<Endpoint>;
+    }
+
+    /**
+    Configuration defined for the instance
+    **/
+    async configuration(): Promise<Config> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "TincWebUI.Configuration",
+            "id" : this.__next_id(),
+            "params" : []
+        })) as Config;
     }
 
 

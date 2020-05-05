@@ -20,6 +20,11 @@ type Endpoint struct {
 	Kind EndpointKind `json:"kind"`
 }
 
+//
+type Config struct {
+	Binding string `json:"binding"`
+}
+
 func Default() *TincWebUIClient {
 	return &TincWebUIClient{BaseURL: "http://127.0.0.1:8686/api/"}
 }
@@ -44,5 +49,11 @@ func (impl *TincWebUIClient) Notify(ctx context.Context, title string, message s
 // Endpoints list to access web UI
 func (impl *TincWebUIClient) Endpoints(ctx context.Context) (reply []Endpoint, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "TincWebUI.Endpoints", atomic.AddUint64(&impl.sequence, 1), &reply)
+	return
+}
+
+// Configuration defined for the instance
+func (impl *TincWebUIClient) Configuration(ctx context.Context) (reply *Config, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "TincWebUI.Configuration", atomic.AddUint64(&impl.sequence, 1), &reply)
 	return
 }

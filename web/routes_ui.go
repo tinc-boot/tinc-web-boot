@@ -15,6 +15,7 @@ type uiRoutes struct {
 	key           string
 	port          uint16
 	publicAddress []string
+	config        shared.Config
 	pool          *tincd.Tincd
 }
 
@@ -77,4 +78,8 @@ func (srv *uiRoutes) Endpoints() ([]shared.Endpoint, error) {
 		})
 	}
 	return ans, nil
+}
+
+func (srv *uiRoutes) Configuration() (*shared.Config, error) {
+	return &srv.config, nil
 }

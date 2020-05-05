@@ -170,6 +170,7 @@ func (m *Root) Run(global *globalContext) error {
 		AuthKey:         m.AuthKey,
 		LocalUIPort:     uint16(port),
 		PublicAddresses: m.UIPublicAddress,
+		Binding:         m.Bind,
 	}
 	webApi, uiApp := apiCfg.New(pool)
 	if !m.Headless {

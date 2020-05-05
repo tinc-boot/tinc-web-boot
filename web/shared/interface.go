@@ -71,6 +71,10 @@ type Endpoint struct {
 	Kind EndpointKind `json:"kind"`
 }
 
+type Config struct {
+	Binding string `json:"binding"`
+}
+
 // Operations with tinc-web-boot related to UI
 type TincWebUI interface {
 	// Issue and sign token
@@ -79,6 +83,8 @@ type TincWebUI interface {
 	Notify(title, message string) (bool, error)
 	// Endpoints list to access web UI
 	Endpoints() ([]Endpoint, error)
+	// Configuration defined for the instance
+	Configuration() (*Config, error)
 }
 
 // Operations for joining public network

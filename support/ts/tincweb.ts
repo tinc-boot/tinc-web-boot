@@ -70,7 +70,7 @@ export interface Upgrade {
 
 
 
-export type Duration = string; // suffixes: ns, us, ms, s, m, h (!!!!)
+export type Duration = string; // suffixes: ns, us, ms, s, m, h
 
 
 // support stuff

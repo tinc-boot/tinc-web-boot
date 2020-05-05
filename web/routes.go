@@ -22,6 +22,7 @@ type Config struct {
 	AuthKey         string
 	LocalUIPort     uint16
 	PublicAddresses []string
+	Binding         string
 }
 
 //go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
@@ -60,6 +61,7 @@ func (cfg Config) New(pool *tincd.Tincd) (*gin.Engine, *uiRoutes) {
 		port:          cfg.LocalUIPort,
 		publicAddress: cfg.PublicAddresses,
 		pool:          pool,
+		config:        shared.Config{Binding: cfg.Binding},
 	}
 
 	internal.RegisterTincWeb(&jsonRouter, &api{pool: pool, publicAddress: cfg.PublicAddresses, key: cfg.AuthKey})

@@ -56,6 +56,18 @@ export class TincWebUI {
         }));
     }
 
+    /**
+    Configuration defined for the instance
+    **/
+    async configuration(){
+        return (await this.__call('Configuration', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWebUI.Configuration",
+            "id" : this.__next_id(),
+            "params" : []
+        }));
+    }
+
 
 
     __next_id() {

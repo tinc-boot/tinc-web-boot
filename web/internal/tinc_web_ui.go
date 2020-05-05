@@ -45,5 +45,9 @@ func RegisterTincWebUI(router *jsonrpc2.Router, wrap shared.TincWebUI) []string 
 		return wrap.Endpoints()
 	})
 
-	return []string{"TincWebUI.IssueAccessToken", "TincWebUI.Notify", "TincWebUI.Endpoints"}
+	router.RegisterFunc("TincWebUI.Configuration", func(params json.RawMessage, positional bool) (interface{}, error) {
+		return wrap.Configuration()
+	})
+
+	return []string{"TincWebUI.IssueAccessToken", "TincWebUI.Notify", "TincWebUI.Endpoints", "TincWebUI.Configuration"}
 }

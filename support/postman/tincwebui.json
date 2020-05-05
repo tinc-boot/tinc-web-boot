@@ -122,6 +122,45 @@
         },
         "description": "# TincWebUI.Endpoints\n\nEndpoints list to access web UI\n\n* Method: `TincWebUI.Endpoints`\n* Returns: `[]Endpoint`\n\n### Endpoint\n\n| Json | Type | Comment |\n|------|------|---------|\n| host | `string` |  |\n| port | `uint16` |  |\n| kind | `EndpointKind` |  |\n\n"
       }
+    },
+    {
+      "name": "Configuration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWebUI.Configuration\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api",
+            ""
+          ]
+        },
+        "description": "# TincWebUI.Configuration\n\nConfiguration defined for the instance\n\n* Method: `TincWebUI.Configuration`\n* Returns: `*Config`\n\n### Config\n\n| Json | Type | Comment |\n|------|------|---------|\n| binding | `string` |  |\n\n"
+      }
     }
   ]
 }
