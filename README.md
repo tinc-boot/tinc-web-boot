@@ -24,6 +24,10 @@ Status: **draft**
                                       +-------------------------+
 ```
 
+## Majordomo
+
+![majordomo-invite](https://user-images.githubusercontent.com/6597086/81259405-76a9e400-906a-11ea-8039-349ca4a51763.png)
+
 ## Features
 
 | Status | Description |

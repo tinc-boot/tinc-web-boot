@@ -17,16 +17,19 @@ import (
 )
 
 type baseParam struct {
-	URL       string `name:"url" env:"URL" help:"API URL for tinc-web-boot" default:"http://127.0.0.1:8686/api"`
-	Token     string `name:"token" env:"TOKEN" help:"Access token for API" default:"local"`
-	TokenFile string `short:"f" long:"token-file" env:"TOKEN_FILE" description:"Token file" default:".tinc-web-boot"`
+	URL       string   `name:"url" env:"URL" help:"API URL for tinc-web-boot" default:"http://127.0.0.1:8686/api"`
+	Token     string   `name:"token" env:"TOKEN" help:"Access token for API" default:"local"`
+	TokenFile []string `short:"f" long:"token-file" env:"TOKEN_FILE" description:"Token file" default:".tinc-web-boot,/etc/tinc-web-boot/.tinc-web-boot"`
 }
 
 func (bp baseParam) Client() *tincweb.TincWebClient {
-	if bp.TokenFile != "" && (bp.Token == "" || bp.Token == "local") {
-		data, err := ioutil.ReadFile(bp.TokenFile)
-		if err == nil {
-			bp.Token = string(data)
+	if len(bp.TokenFile) > 0 && (bp.Token == "" || bp.Token == "local") {
+		for _, file := range bp.TokenFile {
+			data, err := ioutil.ReadFile(file)
+			if err == nil {
+				bp.Token = string(data)
+				break
+			}
 		}
 	}
 	return &tincweb.TincWebClient{BaseURL: bp.URL + "/" + bp.Token}
@@ -264,7 +267,7 @@ func (m *join) Run(global *globalContext) error {
 	parts := strings.Split(m.URL, "/")
 	token := parts[len(parts)-1]
 	data := strings.Split(token, ".")[1]
-	bindata, err := base64.StdEncoding.DecodeString(data)
+	bindata, err := base64.RawStdEncoding.DecodeString(data)
 	if err != nil {
 		return err
 	}
