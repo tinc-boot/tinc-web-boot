@@ -55,6 +55,13 @@ test-connectivity: vagrant
 	test `curl -X POST --data-binary '{"jsonrpc":"2.0", "id": 1, "method": "TincWeb.Peers", "params": ["example-network"] }' 'http://127.0.0.1:18686/api' | \
 		jq '[ .result[] | select(.status.fetched )] | length'` -eq 2 && echo "Connected!" || echo "Connectivity test FAILED"
 
+deploy: linux
+	rm -rf networks
+	./build/tinc-web-boot run --dev --dev-gen-only --headless --dev-net mesh --dev-auto-start
+	ansible-playbook -i deploy/docker_machine.yml deploy/dev_deploy.yml
+
+
+
 test: test-connectivity
 
 checkplatform: linux windows darwin

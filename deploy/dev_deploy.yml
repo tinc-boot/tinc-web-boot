@@ -1,0 +1,3 @@
+- hosts: paas.reddec.net
+  tasks:
+    - include: linux_server.yml

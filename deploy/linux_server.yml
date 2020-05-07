@@ -1,0 +1,37 @@
+- name: "install tincd binary"
+  apt:
+    name: tinc
+    state: present
+- name: "copy service file"
+  copy:
+    src: tinc-web-boot.service
+    dest: /etc/systemd/system/
+- name: "stop service"
+  systemd:
+    name: tinc-web-boot
+    state: stopped
+    enabled: yes
+- name: "copy local binary"
+  synchronize:
+    src: ../build/tinc-web-boot
+    dest: /usr/bin/tinc-web-boot
+    archive: yes
+- name: "make etc dir"
+  file:
+    state: directory
+    path: /etc/tinc-web-boot
+- name: "remove old networks"
+  file:
+    state: absent
+    path: /etc/tinc-web-boot/networks
+- name: "copy networks"
+  synchronize:
+    src: ../networks/
+    dest: /etc/tinc-web-boot/networks
+    archive: yes
+- name: "start service"
+  systemd:
+    name: tinc-web-boot
+    state: started
+    enabled: yes
+    daemon_reload: yes

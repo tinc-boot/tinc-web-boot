@@ -1,0 +1,11 @@
+[Unit]
+Description=Tinc Web Boot
+
+[Service]
+WorkingDirectory=/etc/tinc-web-boot
+ExecStart=/usr/bin/tinc-web-boot run --headless --bind 0.0.0.0:8686 -A %H:8686
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
