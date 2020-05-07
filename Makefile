@@ -1,5 +1,8 @@
 install: backend
 
+clean:
+	rm -rf build
+
 bindata:
 	GO111MODULE=off go get -v github.com/go-bindata/go-bindata/...
 

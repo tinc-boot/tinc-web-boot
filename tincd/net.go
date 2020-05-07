@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	beaconAddress = "224.0.0.251:2655"
-	beaconText    = "tinc-web-boot i-am-here"
+	beaconPort = 2655
+	beaconText = "tinc-web-boot i-am-here"
 )
 
 type netImpl struct {
@@ -206,7 +206,7 @@ func (impl *netImpl) run(global context.Context) error {
 }
 
 func (impl *netImpl) runBroadcaster(ctx context.Context, interfaceName string, peers chan<- peerReq) error {
-	beacons, err := beacon.Run(ctx, interfaceName, beaconAddress, beaconText)
+	beacons, err := beacon.Run(ctx, interfaceName, beaconText, beaconPort)
 	if err != nil {
 
 		return err

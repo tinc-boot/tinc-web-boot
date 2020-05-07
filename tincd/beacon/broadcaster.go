@@ -2,8 +2,9 @@ package beacon
 
 import (
 	"context"
+	"encoding/binary"
+	"errors"
 	"fmt"
-	"golang.org/x/net/ipv4"
 	"log"
 	"net"
 	"time"
@@ -13,19 +14,19 @@ const (
 	DefaultKeepAlive = 15 * time.Second
 )
 
-func Run(ctx context.Context, interfaceName, groupAddress, beacon string) (<-chan Beacon, error) {
+func Run(ctx context.Context, interfaceName, beacon string, port uint16) (<-chan Beacon, error) {
 	brc := Broadcaster{
 		Interface: interfaceName,
-		Group:     groupAddress,
 		Beacon:    []byte(beacon),
 		Context:   ctx,
+		Port:      port,
 	}
 	return brc.Run()
 }
 
 type Broadcaster struct {
 	Interface  string          // network interface name
-	Group      string          // multicast group address with port
+	Port       uint16          // broadcasting port
 	Beacon     []byte          // beacon to broadcast every interval
 	Interval   time.Duration   // (optional, default 15s) interval between beacons
 	BufferSize int             // (optional, default 8192) size for buffer for incoming beacons
@@ -34,11 +35,6 @@ type Broadcaster struct {
 
 // Listen UDP multicast address for beacons and send own every interval
 func (cfg Broadcaster) Run() (<-chan Beacon, error) {
-	group, err := net.ResolveUDPAddr("udp", cfg.Group)
-	if err != nil {
-		return nil, err
-	}
-
 	iface, err := net.InterfaceByName(cfg.Interface)
 	if err != nil {
 		return nil, err
@@ -49,10 +45,18 @@ func (cfg Broadcaster) Run() (<-chan Beacon, error) {
 		return nil, err
 	}
 
-	var ip net.IP
+	var (
+		ip            net.IP
+		broadcastAddr net.IP
+	)
 	for _, addr := range addrs {
 		if v, ok := addr.(*net.IPNet); ok && v.IP.To4() != nil {
 			ip = v.IP
+			bcast, err := getBroadcastAddr(v)
+			if err != nil {
+				return nil, err
+			}
+			broadcastAddr = bcast
 			break
 		}
 	}
@@ -61,52 +65,32 @@ func (cfg Broadcaster) Run() (<-chan Beacon, error) {
 	}
 	log.Println("[TRACE]", "binding broadcaster on", ip.String())
 
-	senderConn, err := net.ListenPacket("udp4", ip.String()+":0")
+	socket, err := net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip.String(), cfg.Port))
 	if err != nil {
 		return nil, err
-	}
-	senderPacket := ipv4.NewPacketConn(senderConn)
-
-	listener, err := net.ListenUDP("udp4", group)
-	if err != nil {
-		return nil, err
-	}
-
-	packet := ipv4.NewPacketConn(listener)
-	err = packet.JoinGroup(iface, group)
-	if err != nil {
-		listener.Close()
-		senderConn.Close()
-		return nil, err
-	}
-
-	err = senderPacket.SetMulticastLoopback(true)
-	if err != nil {
-		log.Println("[WARN]", "failed set loopback multicast:", err)
 	}
 
 	out := make(chan Beacon, 1)
 	go func() {
-		defer listener.Close()
-		defer senderConn.Close()
+		defer socket.Close()
 		defer close(out)
-		cfg.run(packet, senderPacket, group, out)
+		cfg.run(broadcastAddr, socket, out)
 	}()
 
 	return out, nil
 }
 
-func (cfg Broadcaster) run(listener, sender *ipv4.PacketConn, groupAddr *net.UDPAddr, out chan<- Beacon) {
+func (cfg Broadcaster) run(broadcast net.IP, socket net.PacketConn, out chan<- Beacon) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(cfg.context())
 	go func() {
 		defer close(done)
 		timer := time.NewTicker(cfg.interval())
 		defer timer.Stop()
+		dest := &net.UDPAddr{IP: broadcast, Port: int(cfg.Port)}
 	LOOP:
 		for {
-			log.Println("[TRACE]", "sending beacon to:", groupAddr, "payload:", string(cfg.Beacon))
-			_, _ = sender.WriteTo(cfg.Beacon, nil, groupAddr)
+			_, _ = socket.WriteTo(cfg.Beacon, dest)
 			select {
 			case <-ctx.Done():
 				break LOOP
@@ -114,14 +98,14 @@ func (cfg Broadcaster) run(listener, sender *ipv4.PacketConn, groupAddr *net.UDP
 			}
 		}
 		<-ctx.Done()
-		_ = listener.Close()
+		_ = socket.Close()
 	}()
 
 	var buffer = make([]byte, cfg.bufferSize())
 	log.Println("[TRACE]", "buffer size:", len(buffer))
 LOOP:
 	for {
-		n, _, src, err := listener.ReadFrom(buffer)
+		n, src, err := socket.ReadFrom(buffer)
 		if err != nil {
 			break
 		}
@@ -163,4 +147,14 @@ func (cfg Broadcaster) interval() time.Duration {
 		return DefaultKeepAlive
 	}
 	return cfg.Interval
+}
+
+// https://stackoverflow.com/a/36167611/1195316
+func getBroadcastAddr(n *net.IPNet) (net.IP, error) { // works when the n is a prefix, otherwise...
+	if n.IP.To4() == nil {
+		return net.IP{}, errors.New("does not support IPv6 addresses")
+	}
+	ip := make(net.IP, len(n.IP.To4()))
+	binary.BigEndian.PutUint32(ip, binary.BigEndian.Uint32(n.IP.To4())|^binary.BigEndian.Uint32(net.IP(n.Mask).To4()))
+	return ip, nil
 }
