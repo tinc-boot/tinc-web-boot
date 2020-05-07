@@ -22,6 +22,7 @@ func (cfg *Config) Build() (text []byte, err error) {
 		"Device":     {cfg.Device},
 		"IP":         {cfg.IP},
 		"Mask":       {cfg.Mask},
+		"Broadcast":  {cfg.Broadcast},
 	}
 	for _, con := range cfg.ConnectTo {
 		params["ConnectTo"] = append(params["ConnectTo"], con)
@@ -41,6 +42,7 @@ func (cfg *Config) Parse(text []byte) error {
 	cfg.Device = params.First("Device", "")
 	cfg.IP = params.First("IP", "")
 	cfg.Mask = params.FirstInt("Mask")
+	cfg.Broadcast = params.First("Broadcast", "")
 	return nil
 }
 

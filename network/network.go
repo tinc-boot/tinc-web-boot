@@ -301,6 +301,7 @@ func (network *Network) defineConfiguration(subnet *net.IPNet) error {
 		Mode:      "switch",
 		IP:        selfIP.String(),
 		Mask:      mask,
+		Broadcast: "mst",
 	}
 
 	if err := network.beforeConfigure(config); err != nil {

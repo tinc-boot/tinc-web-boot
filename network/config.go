@@ -15,6 +15,7 @@ type Config struct {
 	DeviceType string   `json:"deviceType,omitempty"`
 	Device     string   `json:"device,omitempty"`
 	ConnectTo  []string `json:"connectTo,omitempty"`
+	Broadcast  string   `json:"broadcast"`
 }
 
 type Address struct {

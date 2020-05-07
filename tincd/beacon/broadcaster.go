@@ -90,6 +90,7 @@ func (cfg Broadcaster) run(broadcast net.IP, socket net.PacketConn, out chan<- B
 		dest := &net.UDPAddr{IP: broadcast, Port: int(cfg.Port)}
 	LOOP:
 		for {
+			log.Println("[TRACE]", "sending beacon to", dest)
 			_, _ = socket.WriteTo(cfg.Beacon, dest)
 			select {
 			case <-ctx.Done():
