@@ -237,7 +237,7 @@ func (impl *netImpl) queryActivePeers(ctx context.Context) {
 		for _, peer := range impl.peers.List() {
 			list, err := peer.fetchNodes(ctx)
 			if err != nil {
-				log.Println("failed to fetch list of nodes from", peer.Node, ":", err)
+				log.Println("failed to fetch list of nodes from", peer.Node(), ":", err)
 				continue
 			}
 
