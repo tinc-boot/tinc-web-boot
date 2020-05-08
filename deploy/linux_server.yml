@@ -39,3 +39,10 @@
 
 - name: "start network"
   command: "tinc-web-boot start mesh"
+
+- name: "generate invite link"
+  command: "tinc-web-boot invite mesh"
+  register: link
+
+- debug:
+    msg: "{{link.stdout}}"

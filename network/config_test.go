@@ -1,13 +1,15 @@
 package network
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_parse(t *testing.T) {
 	node := Node{
 		Name:      "TEST",
 		Subnet:    "1.2.3.4/32",
-		Address:   []Address{{Host: "127.0.0.1", Port: 321}, {Host: "127.0.0.1", Port: 1223}},
-		PublicKey: "---\nXXX\n---",
+		Address:   []Address{{Host: "127.0.0.1", Port: 321}, {Host: "127.0.0.1", Port: 0}},
+		PublicKey: "-----BEGIN RSA PUBLIC KEY-----\nXXX\n-----END RSA PUBLIC KEY-----",
 	}
 	text, err := node.Build()
 	if err != nil {
