@@ -63,9 +63,13 @@ func (cfg Broadcaster) Run() (<-chan Beacon, error) {
 	if ip == nil {
 		return nil, fmt.Errorf("no IPv4 address on interface")
 	}
-	log.Println("[TRACE]", "binding broadcaster on", ip.String())
+	bindingAddr := fmt.Sprintf("%s:%d", ip.String(), cfg.Port)
+	log.Println("[TRACE]", "binding broadcaster on", bindingAddr)
 
-	socket, err := net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip.String(), cfg.Port))
+	socket, err := net.ListenUDP("udp4", &net.UDPAddr{
+		IP:   ip,
+		Port: int(cfg.Port),
+	})
 	if err != nil {
 		return nil, err
 	}

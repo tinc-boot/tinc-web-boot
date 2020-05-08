@@ -57,9 +57,7 @@ test-connectivity: vagrant
 
 deploy: linux
 	rm -rf networks
-	./build/tinc-web-boot run --dev --dev-gen-only --headless --dev-net mesh --dev-auto-start
 	ansible-playbook -i deploy/docker_machine.yml deploy/dev_deploy.yml
-
 
 
 test: test-connectivity

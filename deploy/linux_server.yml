@@ -24,14 +24,18 @@
   file:
     state: absent
     path: /etc/tinc-web-boot/networks
-- name: "copy networks"
-  synchronize:
-    src: ../networks/
-    dest: /etc/tinc-web-boot/networks
-    archive: yes
 - name: "start service"
   systemd:
     name: tinc-web-boot
     state: started
     enabled: yes
     daemon_reload: yes
+
+- name: "add network"
+  command: "tinc-web-boot new mesh 10.155.0.0/16"
+
+- name: "upgrade params"
+  command: "tinc-web-boot upgrade mesh -A {{ansible_fqdn}}:1655 -p 1655"
+
+- name: "start network"
+  command: "tinc-web-boot start mesh"

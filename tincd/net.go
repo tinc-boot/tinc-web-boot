@@ -121,7 +121,7 @@ func (impl *netImpl) run(global context.Context) error {
 	ctx, abort := context.WithCancel(global)
 	defer abort()
 
-	cmd := exec.CommandContext(ctx, impl.tincBin, "-D", "-d", "-d", "-d",
+	cmd := exec.CommandContext(ctx, impl.tincBin, "-D", "-d", "-d", "-d", "-d",
 		"--pidfile", impl.definition.Pidfile(),
 		"--logfile", impl.definition.Logfile(),
 		"-c", absDir)

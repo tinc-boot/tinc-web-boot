@@ -187,11 +187,13 @@ func (m *remove) Run(global *globalContext) error {
 type upgrade struct {
 	baseParam
 	PublicAddress []string `short:"A" name:"public-address" env:"PUBLIC_ADDRESS" help:"Public node address"`
+	Port          uint16   `short:"p" name:"port" env:"PORT" help:"binding port"`
 	Network       string   `arg:"network" required:"yes"`
 }
 
 func (m *upgrade) Run(global *globalContext) error {
 	var params tincweb.Upgrade
+	params.Port = m.Port
 	for _, addr := range m.PublicAddress {
 		host, port, err := net.SplitHostPort(addr)
 		if err != nil {
