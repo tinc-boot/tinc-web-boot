@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	CommunicationPort = 1655
+	CommunicationPort = 4655
 )
 
 type Config struct {

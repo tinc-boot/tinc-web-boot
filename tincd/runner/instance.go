@@ -4,32 +4,45 @@ import (
 	"bufio"
 	"context"
 	"io"
-	"os"
+	"log"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"tinc-web-boot/utils"
 )
 
-var subnetEventPattern = regexp.MustCompile(`(\w+)_SUBNET\s+from\s+([^\s]+)\s+\(([^\s]+)\s+port\s+(\d+)\)\:\s+\d+\s+[\w\d]+\s+([^\s]+)\s+([^#]+)`)
+var (
+	addSubnetPattern = regexp.MustCompile(`ADD_SUBNET\s+from\s+([^\s]+)\s+\(([^\s]+)\s+port\s+(\d+)\)\:\s+\d+\s+[\w\d]+\s+([^\s]+)\s+([^#]+)`)
+	delSubnetPattern = regexp.MustCompile(`DEL_SUBNET\s+[^:]+:\s+\d+\s+[\w\d]+\s+([^\s]+)\s+([^#]+)`)
+)
 
+//Sending DEL_SUBNET to everyone (BROADCAST): 11 3f17d1ce hubreddecnet_PEN005 6e:6a:5e:26:39:d2#10
 func fromLine(line string) *SubnetEvent {
-	match := subnetEventPattern.FindAllStringSubmatch(line, -1)
-	if len(match) == 0 {
-		return nil
+	if match := addSubnetPattern.FindAllStringSubmatch(line, -1); len(match) > 0 {
+		groups := match[0]
+		if len(groups) != 6 {
+			return nil
+		}
+		var event SubnetEvent
+		event.Add = true
+		event.Advertising.Node = groups[1]
+		event.Advertising.Host = groups[2]
+		event.Advertising.Port = groups[3]
+		event.Peer.Node = groups[4]
+		event.Peer.Subnet = groups[5]
+		return &event
+	} else if match := delSubnetPattern.FindAllStringSubmatch(line, -1); len(match) > 0 {
+		groups := match[0]
+		if len(groups) != 3 {
+			return nil
+		}
+		var event SubnetEvent
+		event.Add = false
+		event.Peer.Node = groups[1]
+		event.Peer.Subnet = groups[2]
+		return &event
 	}
-	groups := match[0]
-	if len(groups) != 7 {
-		return nil
-	}
-	var event SubnetEvent
-	event.Add = groups[1] == "ADD"
-	event.Advertising.Node = groups[2]
-	event.Advertising.Host = groups[3]
-	event.Advertising.Port = groups[4]
-	event.Peer.Node = groups[5]
-	event.Peer.Subnet = groups[6]
-	return &event
+	return nil
 }
 
 type SubnetEvent struct {
@@ -46,9 +59,8 @@ type SubnetEvent struct {
 }
 
 func RunTinc(global context.Context, tincBin string, dir string) <-chan SubnetEvent {
-
 	ctx, abort := context.WithCancel(global)
-	defer abort()
+
 	var events = make(chan SubnetEvent)
 
 	reader, writer := io.Pipe()
@@ -58,18 +70,22 @@ func RunTinc(global context.Context, tincBin string, dir string) <-chan SubnetEv
 		"--pidfile", filepath.Join(dir, "pid.run"),
 		"-c", dir)
 	cmd.Dir = dir
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = writer
 	utils.SetCmdAttrs(cmd)
-
 	cmd.Stdout = writer
 
 	go func() {
 		defer writer.Close()
-		_ = cmd.Run()
+		defer abort()
+		err := cmd.Run()
+		if err != nil {
+			log.Println("run tincd:", err)
+		}
 	}()
 
 	go func() {
 		defer close(events)
+		defer abort()
 		for scanner.Scan() {
 			if event := fromLine(scanner.Text()); event != nil {
 				select {

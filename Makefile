@@ -22,7 +22,7 @@ regen: bindata ui
 backend: regen
 	go build -o tinc-web-boot -v ./cmd/tinc-web-boot/
 
-linux:
+linux: clean
 	mkdir -p build
 	GOOS=linux go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/
 
@@ -58,7 +58,6 @@ test-connectivity: vagrant
 deploy: linux
 	rm -rf networks
 	ansible-playbook -i deploy/docker_machine.yml deploy/dev_deploy.yml
-
 
 test: test-connectivity
 

@@ -133,6 +133,7 @@ func (impl *netImpl) run(global context.Context) error {
 	go func() {
 		defer wg.Done()
 		defer abort()
+
 		for event := range runner.RunTinc(global, impl.tincBin, absDir) {
 			if event.Add {
 				impl.activePeers.Store(event.Peer.Node, event)
@@ -141,6 +142,7 @@ func (impl *netImpl) run(global context.Context) error {
 			}
 			log.Printf("%+v", event)
 		}
+
 	}()
 
 	// run http API
@@ -148,14 +150,21 @@ func (impl *netImpl) run(global context.Context) error {
 	go func() {
 		defer wg.Done()
 		defer abort()
-		err := apiserver.RunHTTP(ctx, "tcp", self.IP+":"+strconv.Itoa(network.CommunicationPort), impl)
-		log.Println(impl.definition.Name(), "api stopped:", err)
+		for {
+			err := apiserver.RunHTTP(ctx, "tcp", self.IP+":"+strconv.Itoa(network.CommunicationPort), impl)
+			log.Println(impl.definition.Name(), "api stopped:", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Second):
+				log.Println("trying again...")
+			}
+		}
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer abort()
 		err := impl.greetEveryone(ctx, *self, greetInterval)
 		if err != nil {
 			log.Println("greeting failed:", err)
@@ -174,6 +183,7 @@ func (impl *netImpl) run(global context.Context) error {
 	}()
 
 	impl.events.Started.Emit(network.NetworkID{Name: impl.definition.Name()})
+	impl.activePeers.Store(self.Name, self)
 	wg.Wait()
 	return ctx.Err()
 }
@@ -195,7 +205,7 @@ func (impl *netImpl) greetEveryone(ctx context.Context, self network.Node, retry
 			for {
 				toImport, err := client.Exchange(ctx, self)
 				if err != nil {
-					log.Println(node.Name, "exchange:", err)
+					log.Println("greet", node.Name, err)
 					goto SLEEP
 				}
 				for _, node := range toImport {
@@ -204,6 +214,7 @@ func (impl *netImpl) greetEveryone(ctx context.Context, self network.Node, retry
 						log.Println(node.Name, "import", node.Name, ":", err)
 					}
 				}
+				log.Println("greeted", node.Name)
 				break
 			SLEEP:
 				select {
