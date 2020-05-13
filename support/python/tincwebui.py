@@ -92,7 +92,7 @@ class TincWebUIClient:
         """
         Issue and sign token
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWebUI.IssueAccessToken",
             "id": self.__next_id(),
@@ -108,7 +108,7 @@ class TincWebUIClient:
         """
         Make desktop notification if system supports it
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWebUI.Notify",
             "id": self.__next_id(),
@@ -124,7 +124,7 @@ class TincWebUIClient:
         """
         Endpoints list to access web UI
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWebUI.Endpoints",
             "id": self.__next_id(),
@@ -140,7 +140,7 @@ class TincWebUIClient:
         """
         Configuration defined for the instance
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWebUI.Configuration",
             "id": self.__next_id(),
@@ -151,3 +151,102 @@ class TincWebUIClient:
         if 'error' in payload:
             raise TincWebUIError.from_json('configuration', payload['error'])
         return Config.from_json(payload['result'])
+
+    async def _invoke(self, request):
+        return await self.__request('POST', self.__url, json=request)
+
+
+class TincWebUIBatch:
+    """
+    Operations with tinc-web-boot related to UI
+    """
+
+    def __init__(self, client: TincWebUIClient, size: int = 10):
+        self.__id = 1
+        self.__client = client
+        self.__requests = []
+        self.__batch = {}
+        self.__batch_size = size
+
+    def __next_id(self):
+        self.__id += 1
+        return self.__id
+
+    def issue_access_token(self, valid_days: int):
+        """
+        Issue and sign token
+        """
+        params = [valid_days, ]
+        method = "TincWebUI.IssueAccessToken"
+        self.__add_request(method, params, lambda payload: payload)
+
+    def notify(self, title: str, message: str):
+        """
+        Make desktop notification if system supports it
+        """
+        params = [title, message, ]
+        method = "TincWebUI.Notify"
+        self.__add_request(method, params, lambda payload: payload)
+
+    def endpoints(self):
+        """
+        Endpoints list to access web UI
+        """
+        params = []
+        method = "TincWebUI.Endpoints"
+        self.__add_request(method, params, lambda payload: [Endpoint.from_json(x) for x in (payload or [])])
+
+    def configuration(self):
+        """
+        Configuration defined for the instance
+        """
+        params = []
+        method = "TincWebUI.Configuration"
+        self.__add_request(method, params, lambda payload: Config.from_json(payload))
+
+    def __add_request(self, method: str, params, factory):
+        request_id = self.__next_id()
+        request = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "id": request_id,
+            "params": params
+        }
+        self.__requests.append(request)
+        self.__batch[request_id] = (request, factory)
+
+    async def __aenter__(self):
+        self.__batch = {}
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self()
+
+    async def __call__(self) -> list:
+        offset = 0
+        num = len(self.__requests)
+        results = []
+        while offset < num:
+            next_offset = offset + self.__batch_size
+            batch = self.__requests[offset:min(num, next_offset)]
+            offset = next_offset
+
+            responses = await self.__post_batch(batch)
+            results = results + responses
+
+        self.__batch = {}
+        self.__requests = []
+        return results
+
+    async def __post_batch(self, batch: list) -> list:
+        response = await self.__client._invoke(batch)
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        results = await response.json()
+        ans = []
+        for payload in results:
+            request, factory = self.__batch[payload['id']]
+            if 'error' in payload:
+                raise TincWebUIError.from_json(request['method'], payload['error'])
+            else:
+                ans.append(factory(payload['result']))
+        return ans

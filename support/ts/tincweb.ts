@@ -22,30 +22,24 @@ export interface Config {
     interface: string
     autostart: boolean
     mode: string
-    ip: string
     mask: number
     deviceType: string | null
     device: string | null
     connectTo: Array<string> | null
+    broadcast: string
 }
 
 export interface PeerInfo {
     name: string
     online: boolean
-    status: Peer | null
-    config: Node | null
-}
-
-export interface Peer {
-    address: string
-    fetched: boolean
-    config: Node | null
+    config: Node
 }
 
 export interface Node {
     name: string
     subnet: string
     port: number
+    ip: string
     address: Array<Address> | null
     publicKey: string
     version: number

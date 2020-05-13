@@ -9,9 +9,9 @@ from typing import Any, List, Optional
 class Duration(Enum):
     MIN_DURATION = -1 << 63
     MAX_DURATION = 1<<63 - 1
+    NANOSECOND = 1
     MIN_DURATION = -1 << 63
     MAX_DURATION = 1<<63 - 1
-    NANOSECOND = 1
 
     def to_json(self) -> int:
         return self.value
@@ -51,11 +51,11 @@ class Config:
     interface: 'str'
     auto_start: 'bool'
     mode: 'str'
-    ip: 'str'
     mask: 'int'
     device_type: 'Optional[str]'
     device: 'Optional[str]'
     connect_to: 'Optional[List[str]]'
+    broadcast: 'str'
 
     def to_json(self) -> dict:
         return {
@@ -64,11 +64,11 @@ class Config:
             "interface": self.interface,
             "autostart": self.auto_start,
             "mode": self.mode,
-            "ip": self.ip,
             "mask": self.mask,
             "deviceType": self.device_type,
             "device": self.device,
             "connectTo": self.connect_to,
+            "broadcast": self.broadcast,
         }
 
     @staticmethod
@@ -79,11 +79,11 @@ class Config:
                 interface=payload['interface'],
                 auto_start=payload['autostart'],
                 mode=payload['mode'],
-                ip=payload['ip'],
                 mask=payload['mask'],
                 device_type=payload['deviceType'],
                 device=payload['device'],
                 connect_to=payload['connectTo'] or [],
+                broadcast=payload['broadcast'],
         )
 
 
@@ -91,14 +91,12 @@ class Config:
 class PeerInfo:
     name: 'str'
     online: 'bool'
-    status: 'Optional[Peer]'
-    configuration: 'Optional[Node]'
+    configuration: 'Node'
 
     def to_json(self) -> dict:
         return {
             "name": self.name,
             "online": self.online,
-            "status": self.status.to_json(),
             "config": self.configuration.to_json(),
         }
 
@@ -107,30 +105,7 @@ class PeerInfo:
         return PeerInfo(
                 name=payload['name'],
                 online=payload['online'],
-                status=Peer.from_json(payload['status']),
                 configuration=Node.from_json(payload['config']),
-        )
-
-
-@dataclass
-class Peer:
-    address: 'str'
-    fetched: 'bool'
-    config: 'Optional[Node]'
-
-    def to_json(self) -> dict:
-        return {
-            "address": self.address,
-            "fetched": self.fetched,
-            "config": self.config.to_json(),
-        }
-
-    @staticmethod
-    def from_json(payload: dict) -> 'Peer':
-        return Peer(
-                address=payload['address'],
-                fetched=payload['fetched'],
-                config=Node.from_json(payload['config']),
         )
 
 
@@ -139,6 +114,7 @@ class Node:
     name: 'str'
     subnet: 'str'
     port: 'int'
+    ip: 'str'
     address: 'Optional[List[Address]]'
     public_key: 'str'
     version: 'int'
@@ -148,6 +124,7 @@ class Node:
             "name": self.name,
             "subnet": self.subnet,
             "port": self.port,
+            "ip": self.ip,
             "address": [x.to_json() for x in self.address],
             "publicKey": self.public_key,
             "version": self.version,
@@ -159,6 +136,7 @@ class Node:
                 name=payload['name'],
                 subnet=payload['subnet'],
                 port=payload['port'],
+                ip=payload['ip'],
                 address=[Address.from_json(x) for x in (payload['address'] or [])],
                 public_key=payload['publicKey'],
                 version=payload['version'],
@@ -263,7 +241,7 @@ class TincWebClient:
         """
         List of available networks (briefly, without config)
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Networks",
             "id": self.__next_id(),
@@ -279,7 +257,7 @@ class TincWebClient:
         """
         Detailed network info
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Network",
             "id": self.__next_id(),
@@ -295,7 +273,7 @@ class TincWebClient:
         """
         Create new network if not exists
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Create",
             "id": self.__next_id(),
@@ -311,7 +289,7 @@ class TincWebClient:
         """
         Remove network (returns true if network existed)
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Remove",
             "id": self.__next_id(),
@@ -327,7 +305,7 @@ class TincWebClient:
         """
         Start or re-start network
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Start",
             "id": self.__next_id(),
@@ -343,7 +321,7 @@ class TincWebClient:
         """
         Stop network
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Stop",
             "id": self.__next_id(),
@@ -359,7 +337,7 @@ class TincWebClient:
         """
         Peers brief list in network  (briefly, without config)
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Peers",
             "id": self.__next_id(),
@@ -375,7 +353,7 @@ class TincWebClient:
         """
         Peer detailed info by in the network
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Peer",
             "id": self.__next_id(),
@@ -393,7 +371,7 @@ class TincWebClient:
 It means let nodes defined in config join to the network.
 Return created (or used) network with full configuration
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Import",
             "id": self.__next_id(),
@@ -409,7 +387,7 @@ Return created (or used) network with full configuration
         """
         Share network and generate configuration file.
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Share",
             "id": self.__next_id(),
@@ -425,7 +403,7 @@ Return created (or used) network with full configuration
         """
         Node definition in network (aka - self node)
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Node",
             "id": self.__next_id(),
@@ -442,7 +420,7 @@ Return created (or used) network with full configuration
         Upgrade node parameters.
 In some cases requires restart
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Upgrade",
             "id": self.__next_id(),
@@ -458,7 +436,7 @@ In some cases requires restart
         """
         Generate Majordomo request for easy-sharing
         """
-        response = await self.__request('POST', self.__url, json={
+        response = await self._invoke({
             "jsonrpc": "2.0",
             "method": "TincWeb.Majordomo",
             "id": self.__next_id(),
@@ -469,3 +447,177 @@ In some cases requires restart
         if 'error' in payload:
             raise TincWebError.from_json('majordomo', payload['error'])
         return payload['result']
+
+    async def _invoke(self, request):
+        return await self.__request('POST', self.__url, json=request)
+
+
+class TincWebBatch:
+    """
+    Public Tinc-Web API (json-rpc 2.0)
+    """
+
+    def __init__(self, client: TincWebClient, size: int = 10):
+        self.__id = 1
+        self.__client = client
+        self.__requests = []
+        self.__batch = {}
+        self.__batch_size = size
+
+    def __next_id(self):
+        self.__id += 1
+        return self.__id
+
+    def networks(self):
+        """
+        List of available networks (briefly, without config)
+        """
+        params = []
+        method = "TincWeb.Networks"
+        self.__add_request(method, params, lambda payload: [Network.from_json(x) for x in (payload or [])])
+
+    def network(self, name: str):
+        """
+        Detailed network info
+        """
+        params = [name, ]
+        method = "TincWeb.Network"
+        self.__add_request(method, params, lambda payload: Network.from_json(payload))
+
+    def create(self, name: str, subnet: str):
+        """
+        Create new network if not exists
+        """
+        params = [name, subnet, ]
+        method = "TincWeb.Create"
+        self.__add_request(method, params, lambda payload: Network.from_json(payload))
+
+    def remove(self, network: str):
+        """
+        Remove network (returns true if network existed)
+        """
+        params = [network, ]
+        method = "TincWeb.Remove"
+        self.__add_request(method, params, lambda payload: payload)
+
+    def start(self, network: str):
+        """
+        Start or re-start network
+        """
+        params = [network, ]
+        method = "TincWeb.Start"
+        self.__add_request(method, params, lambda payload: Network.from_json(payload))
+
+    def stop(self, network: str):
+        """
+        Stop network
+        """
+        params = [network, ]
+        method = "TincWeb.Stop"
+        self.__add_request(method, params, lambda payload: Network.from_json(payload))
+
+    def peers(self, network: str):
+        """
+        Peers brief list in network  (briefly, without config)
+        """
+        params = [network, ]
+        method = "TincWeb.Peers"
+        self.__add_request(method, params, lambda payload: [PeerInfo.from_json(x) for x in (payload or [])])
+
+    def peer(self, network: str, name: str):
+        """
+        Peer detailed info by in the network
+        """
+        params = [network, name, ]
+        method = "TincWeb.Peer"
+        self.__add_request(method, params, lambda payload: PeerInfo.from_json(payload))
+
+    def import(self, sharing: Sharing):
+        """
+        Import another tinc-web network configuration file.
+It means let nodes defined in config join to the network.
+Return created (or used) network with full configuration
+        """
+        params = [sharing.to_json(), ]
+        method = "TincWeb.Import"
+        self.__add_request(method, params, lambda payload: Network.from_json(payload))
+
+    def share(self, network: str):
+        """
+        Share network and generate configuration file.
+        """
+        params = [network, ]
+        method = "TincWeb.Share"
+        self.__add_request(method, params, lambda payload: Sharing.from_json(payload))
+
+    def node(self, network: str):
+        """
+        Node definition in network (aka - self node)
+        """
+        params = [network, ]
+        method = "TincWeb.Node"
+        self.__add_request(method, params, lambda payload: Node.from_json(payload))
+
+    def upgrade(self, network: str, update: Upgrade):
+        """
+        Upgrade node parameters.
+In some cases requires restart
+        """
+        params = [network, update.to_json(), ]
+        method = "TincWeb.Upgrade"
+        self.__add_request(method, params, lambda payload: Node.from_json(payload))
+
+    def majordomo(self, network: str, lifetime: Duration):
+        """
+        Generate Majordomo request for easy-sharing
+        """
+        params = [network, lifetime.to_json(), ]
+        method = "TincWeb.Majordomo"
+        self.__add_request(method, params, lambda payload: payload)
+
+    def __add_request(self, method: str, params, factory):
+        request_id = self.__next_id()
+        request = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "id": request_id,
+            "params": params
+        }
+        self.__requests.append(request)
+        self.__batch[request_id] = (request, factory)
+
+    async def __aenter__(self):
+        self.__batch = {}
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self()
+
+    async def __call__(self) -> list:
+        offset = 0
+        num = len(self.__requests)
+        results = []
+        while offset < num:
+            next_offset = offset + self.__batch_size
+            batch = self.__requests[offset:min(num, next_offset)]
+            offset = next_offset
+
+            responses = await self.__post_batch(batch)
+            results = results + responses
+
+        self.__batch = {}
+        self.__requests = []
+        return results
+
+    async def __post_batch(self, batch: list) -> list:
+        response = await self.__client._invoke(batch)
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        results = await response.json()
+        ans = []
+        for payload in results:
+            request, factory = self.__batch[payload['id']]
+            if 'error' in payload:
+                raise TincWebError.from_json(request['method'], payload['error'])
+            else:
+                ans.append(factory(payload['result']))
+        return ans

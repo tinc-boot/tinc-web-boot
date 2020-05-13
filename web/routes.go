@@ -182,27 +182,18 @@ func (srv *api) Peers(network string) ([]*shared.PeerInfo, error) {
 		return nil, err
 	}
 
-	list, err := ntw.Definition().Nodes()
+	list, err := ntw.Definition().NodesDefinitions()
 	if err != nil {
 		return nil, err
 	}
 
 	var ans []*shared.PeerInfo
-	activePeers := ntw.Peers()
 
-	var indexedActivePeers = make(map[string]*tincd.Peer)
-	for _, peer := range activePeers {
-		if peer.Config != nil {
-			indexedActivePeers[peer.Config.Name] = peer
-		}
-	}
-
-	for _, name := range list {
-		info, active := indexedActivePeers[name]
+	for _, config := range list {
 		ans = append(ans, &shared.PeerInfo{
-			Name:   name,
-			Online: active,
-			Status: info,
+			Name:          config.Name,
+			Online:        ntw.IsActive(config.Name),
+			Configuration: config,
 		})
 	}
 	return ans, nil
@@ -217,12 +208,10 @@ func (srv *api) Peer(network, name string) (*shared.PeerInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	info, active := ntw.Peer(node.Name)
 	return &shared.PeerInfo{
 		Name:          node.Name,
-		Online:        active,
-		Status:        info,
-		Configuration: node,
+		Online:        ntw.IsActive(node.Name),
+		Configuration: *node,
 	}, nil
 }
 

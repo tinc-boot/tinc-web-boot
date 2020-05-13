@@ -4,31 +4,32 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
-	"os"
-	"os/exec"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 	"tinc-web-boot/network"
-	"tinc-web-boot/tincd/beacon"
-	"tinc-web-boot/utils"
+	"tinc-web-boot/tincd/api/impl/apiclient"
+	"tinc-web-boot/tincd/api/impl/apiserver"
+	"tinc-web-boot/tincd/runner"
 )
 
 const (
-	beaconPort = 2655
-	beaconText = "tinc-web-boot i-am-here"
+	greetInterval = 5 * time.Second
 )
 
 type netImpl struct {
 	tincBin string
 	ctx     context.Context
 
-	done   chan struct{}
-	stop   func()
-	lock   sync.Mutex
-	peers  peersManager
+	done chan struct{}
+	stop func()
+	lock sync.Mutex
+
+	activePeers sync.Map
+
 	events *network.Events
 
 	definition *network.Network
@@ -43,10 +44,6 @@ func (impl *netImpl) Start() {
 	done := make(chan struct{})
 	impl.stop = cancel
 	impl.done = done
-	impl.peers = peersManager{
-		network: impl.definition,
-		events:  impl.events,
-	}
 	go func() {
 		defer cancel()
 		defer close(done)
@@ -55,6 +52,7 @@ func (impl *netImpl) Start() {
 		if err != nil {
 			log.Println("failed run network", impl.definition.Name(), ":", err)
 		}
+		impl.activePeers = sync.Map{}
 	}()
 }
 
@@ -64,12 +62,19 @@ func (impl *netImpl) Stop() {
 	impl.unsafeStop()
 }
 
-func (impl *netImpl) Peers() []*Peer {
-	return impl.peers.List()
+func (impl *netImpl) Peers() []string {
+	var ans []string
+	impl.activePeers.Range(func(key, value interface{}) bool {
+		ans = append(ans, key.(string))
+		return true
+	})
+	sort.Strings(ans)
+	return ans
 }
 
-func (impl *netImpl) Peer(name string) (*Peer, bool) {
-	return impl.peers.Get(name)
+func (impl *netImpl) IsActive(node string) bool {
+	_, ok := impl.activePeers.Load(node)
+	return ok
 }
 
 func (impl *netImpl) Definition() *network.Network {
@@ -103,16 +108,16 @@ func (impl *netImpl) run(global context.Context) error {
 	if err := impl.definition.Prepare(global, impl.tincBin); err != nil {
 		return fmt.Errorf("configure: %w", err)
 	}
+	self, config, err := impl.Definition().SelfConfig()
+	if err != nil {
+		return err
+	}
 
 	absDir, err := filepath.Abs(impl.definition.Root)
 	if err != nil {
 		return err
 	}
 
-	config, err := impl.definition.Read()
-	if err != nil {
-		return err
-	}
 	interfaceName := config.Interface
 	if interfaceName == "" { // for darwin
 		interfaceName = config.Device[strings.LastIndex(config.Device, "/")+1:]
@@ -121,17 +126,6 @@ func (impl *netImpl) run(global context.Context) error {
 	ctx, abort := context.WithCancel(global)
 	defer abort()
 
-	cmd := exec.CommandContext(ctx, impl.tincBin, "-D", "-d", "-d", "-d", "-d",
-		"--pidfile", impl.definition.Pidfile(),
-		"--logfile", impl.definition.Logfile(),
-		"-c", absDir)
-	cmd.Dir = absDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	utils.SetCmdAttrs(cmd)
-
-	peers := make(chan peerReq)
-
 	var wg sync.WaitGroup
 
 	// run tinc service
@@ -139,9 +133,13 @@ func (impl *netImpl) run(global context.Context) error {
 	go func() {
 		defer wg.Done()
 		defer abort()
-		err := cmd.Run()
-		if err != nil {
-			log.Println(impl.definition.Name(), "failed to run tinc:", err)
+		for event := range runner.RunTinc(global, impl.tincBin, absDir) {
+			if event.Add {
+				impl.activePeers.Store(event.Peer.Node, event)
+			} else {
+				impl.activePeers.Delete(event.Peer.Node)
+			}
+			log.Printf("%+v", event)
 		}
 	}()
 
@@ -150,42 +148,18 @@ func (impl *netImpl) run(global context.Context) error {
 	go func() {
 		defer wg.Done()
 		defer abort()
-		runAPI(ctx, impl.definition)
-		log.Println(impl.definition.Name(), "api stopped")
+		err := apiserver.RunHTTP(ctx, "tcp", self.IP+":"+strconv.Itoa(network.CommunicationPort), impl)
+		log.Println(impl.definition.Name(), "api stopped:", err)
 	}()
 
-	// run broadcaster (to find another nodes)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer abort()
-		for {
-			err := impl.runBroadcaster(ctx, interfaceName, peers)
-			if err != nil {
-				log.Println("failed start broadcaster:", err, "interface:", interfaceName)
-			}
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(1 * time.Second):
-			}
+		err := impl.greetEveryone(ctx, *self, greetInterval)
+		if err != nil {
+			log.Println("greeting failed:", err)
 		}
-	}()
-
-	// run peers checker
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer abort()
-		impl.peers.Run(ctx, peers)
-	}()
-
-	// run periodic query of peers
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer abort()
-		impl.queryActivePeers(ctx)
 	}()
 
 	// fix: change owner of log file and pid file to process runner
@@ -195,7 +169,6 @@ func (impl *netImpl) run(global context.Context) error {
 		select {
 		case <-ctx.Done():
 		case <-time.After(2 * time.Second):
-			_ = network.ApplyOwnerOfSudoUser(impl.definition.Logfile())
 			_ = network.ApplyOwnerOfSudoUser(impl.definition.Pidfile())
 		}
 	}()
@@ -205,56 +178,52 @@ func (impl *netImpl) run(global context.Context) error {
 	return ctx.Err()
 }
 
-func (impl *netImpl) runBroadcaster(ctx context.Context, interfaceName string, peers chan<- peerReq) error {
-	beacons, err := beacon.Run(ctx, interfaceName, beaconText, beaconPort)
-	if err != nil {
+func (impl *netImpl) greetEveryone(ctx context.Context, self network.Node, retryInterval time.Duration) error {
+	var wg sync.WaitGroup
 
+	nodes, err := impl.Definition().NodesDefinitions()
+	if err != nil {
 		return err
 	}
-	log.Println("[TRACE]", "broadcaster started on", interfaceName)
-	filtered := beacon.FilterByContent(ctx, beacons, []byte(beaconText))
-LOOP:
-	for update := range beacon.Discovery(ctx, filtered, beacon.DefaultKeepAlive*2) {
-		log.Println("[TRACE]", "found beacon from", update.Address, "action:", update.Action)
-		if update.Action == beacon.Updated {
-			continue
-		}
-		addr, _, _ := net.SplitHostPort(update.Address)
-		select {
-		case peers <- peerReq{
-			Address: addr,
-			Add:     update.Action == beacon.Discovered,
-		}:
-		case <-ctx.Done():
-			break LOOP
-		}
+
+	for _, node := range nodes {
+		wg.Add(1)
+		go func(node network.Node) {
+			defer wg.Done()
+
+			var client = apiclient.APIClient{BaseURL: "http://" + node.IP + ":" + strconv.Itoa(network.CommunicationPort)}
+			for {
+				toImport, err := client.Exchange(ctx, self)
+				if err != nil {
+					log.Println(node.Name, "exchange:", err)
+					goto SLEEP
+				}
+				for _, node := range toImport {
+					err := impl.Definition().Put(&node)
+					if err != nil {
+						log.Println(node.Name, "import", node.Name, ":", err)
+					}
+				}
+				break
+			SLEEP:
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(retryInterval):
+
+				}
+			}
+
+		}(node)
 	}
+	wg.Wait()
 	return nil
 }
 
-func (impl *netImpl) queryActivePeers(ctx context.Context) {
-	for {
-		for _, peer := range impl.peers.List() {
-			list, err := peer.fetchNodes(ctx)
-			if err != nil {
-				log.Println("failed to fetch list of nodes from", peer.Node(), ":", err)
-				continue
-			}
-
-			for _, node := range list {
-				err = impl.Definition().Put(node)
-				if err != nil {
-					log.Println("failed to save node", node.Name, ":", err)
-					continue
-				}
-			}
-		}
-
-		select {
-		case <-time.After(nodesListInterval):
-		case <-ctx.Done():
-			return
-		}
-
+func (impl *netImpl) Exchange(remote network.Node) ([]network.Node, error) {
+	err := impl.Definition().Put(&remote)
+	if err != nil {
+		return nil, err
 	}
+	return impl.Definition().NodesDefinitions()
 }

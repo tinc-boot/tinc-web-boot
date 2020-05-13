@@ -38,6 +38,7 @@ EOF
 | name | `string` |  |
 | subnet | `string` |  |
 | port | `uint16` |  |
+| ip | `string` |  |
 | address | `[]Address` |  |
 | publicKey | `string` |  |
 | version | `int` |  |

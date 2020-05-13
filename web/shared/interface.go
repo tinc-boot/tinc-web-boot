@@ -3,7 +3,6 @@ package shared
 import (
 	"time"
 	"tinc-web-boot/network"
-	"tinc-web-boot/tincd"
 )
 
 type Network struct {
@@ -13,10 +12,9 @@ type Network struct {
 }
 
 type PeerInfo struct {
-	Name          string        `json:"name"`
-	Online        bool          `json:"online"`
-	Status        *tincd.Peer   `json:"status,omitempty"`
-	Configuration *network.Node `json:"config,omitempty"`
+	Name          string       `json:"name"`
+	Online        bool         `json:"online"`
+	Configuration network.Node `json:"config"`
 }
 
 type Sharing struct {

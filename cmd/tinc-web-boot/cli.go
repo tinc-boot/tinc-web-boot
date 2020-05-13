@@ -12,8 +12,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"tinc-web-boot/network"
 	"tinc-web-boot/support/go/tincweb"
 	"tinc-web-boot/support/go/tincwebmajordomo"
+	"tinc-web-boot/web/shared"
 )
 
 type baseParam struct {
@@ -111,7 +113,7 @@ func (m *importNetwork) Run(global *globalContext) error {
 		f = fs
 	}
 	dec := json.NewDecoder(f)
-	var cfg tincweb.Sharing
+	var cfg shared.Sharing
 	err := dec.Decode(&cfg)
 	if err != nil {
 		return err
@@ -136,17 +138,8 @@ func (m *peers) Run(global *globalContext) error {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Connected", "Address", "Version"})
 	for _, peer := range list {
-		info, err := m.Client().Peer(global.ctx, m.Network, peer.Name)
-		if err != nil {
-			return err
-		}
-		var addr string
-		if peer.Status != nil {
-			addr = peer.Status.Address
-		}
-
 		table.Append([]string{
-			peer.Name, fmt.Sprint(peer.Online), addr, fmt.Sprint(info.Configuration.Version),
+			peer.Name, fmt.Sprint(peer.Online), peer.Configuration.IP, fmt.Sprint(peer.Configuration.Version),
 		})
 	}
 	table.Render()
@@ -192,7 +185,7 @@ type upgrade struct {
 }
 
 func (m *upgrade) Run(global *globalContext) error {
-	var params tincweb.Upgrade
+	var params network.Upgrade
 	params.Port = m.Port
 	for _, addr := range m.PublicAddress {
 		host, port, err := net.SplitHostPort(addr)
@@ -203,7 +196,7 @@ func (m *upgrade) Run(global *globalContext) error {
 		if err != nil {
 			return err
 		}
-		params.Address = append(params.Address, tincweb.Address{
+		params.Address = append(params.Address, network.Address{
 			Host: host,
 			Port: uint16(portV),
 		})
@@ -296,30 +289,12 @@ func (m *join) Run(global *globalContext) error {
 		return err
 	}
 
-	var mapped = &tincwebmajordomo.Node{
-		Name:      self.Name,
-		Subnet:    self.Subnet,
-		Port:      self.Port,
-		PublicKey: self.PublicKey,
-		Version:   self.Version,
-	}
-	for _, addr := range self.Address {
-		mapped.Address = append(mapped.Address, tincwebmajordomo.Address{
-			Host: addr.Host,
-			Port: addr.Port,
-		})
-	}
-	shared, err := remote.Join(global.ctx, share.Network, mapped)
-	if err != nil {
-		return err
-	}
-	var mappedShared tincweb.Sharing
-	err = quickRemap(&mappedShared, shared)
+	sharedNet, err := remote.Join(global.ctx, share.Network, self)
 	if err != nil {
 		return err
 	}
 
-	info, err := m.Client().Import(global.ctx, mappedShared)
+	info, err := m.Client().Import(global.ctx, *sharedNet)
 	if err != nil {
 		return err
 	}
@@ -333,13 +308,12 @@ func (m *join) Run(global *globalContext) error {
 	return nil
 }
 
-func printNetwork(info *tincweb.Network) {
+func printNetwork(info *shared.Network) {
 	fmt.Println("Name:", info.Name)
 	fmt.Println("Running:", info.Running)
 	if info.Config == nil {
 		return
 	}
-	fmt.Println("IP:", info.Config.IP)
 	fmt.Println("Mask:", info.Config.Mask)
 	fmt.Println("Node:", info.Config.Name)
 	fmt.Println("Device:", info.Config.Device)
@@ -351,12 +325,4 @@ func printNetwork(info *tincweb.Network) {
 	for _, c := range info.Config.ConnectTo {
 		fmt.Println("Connect to:", c)
 	}
-}
-
-func quickRemap(dst interface{}, src interface{}) error {
-	data, err := json.Marshal(src)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, dst)
 }

@@ -276,7 +276,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Peers\n\nPeers brief list in network  (briefly, without config)\n\n* Method: `TincWeb.Peers`\n* Returns: `[]*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| status | `*tincd.Peer` |  |\n| config | `*network.Node` |  |\n\n"
+        "description": "# TincWeb.Peers\n\nPeers brief list in network  (briefly, without config)\n\n* Method: `TincWeb.Peers`\n* Returns: `[]*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| config | `network.Node` |  |\n\n"
       }
     },
     {
@@ -315,7 +315,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Peer\n\nPeer detailed info by in the network\n\n* Method: `TincWeb.Peer`\n* Returns: `*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | name | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| status | `*tincd.Peer` |  |\n| config | `*network.Node` |  |\n\n"
+        "description": "# TincWeb.Peer\n\nPeer detailed info by in the network\n\n* Method: `TincWeb.Peer`\n* Returns: `*PeerInfo`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | name | `string` |\n\n### PeerInfo\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| online | `bool` |  |\n| config | `network.Node` |  |\n\n"
       }
     },
     {
@@ -432,7 +432,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Node\n\nNode definition in network (aka - self node)\n\n* Method: `TincWeb.Node`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n\n"
+        "description": "# TincWeb.Node\n\nNode definition in network (aka - self node)\n\n* Method: `TincWeb.Node`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| ip | `string` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n\n"
       }
     },
     {
@@ -471,7 +471,7 @@
             ""
           ]
         },
-        "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
+        "description": "# TincWeb.Upgrade\n\nUpgrade node parameters.\nIn some cases requires restart\n\n* Method: `TincWeb.Upgrade`\n* Returns: `*network.Node`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | update | `Upgrade` |\n\n### Node\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| subnet | `string` |  |\n| port | `uint16` |  |\n| ip | `string` |  |\n| address | `[]Address` |  |\n| publicKey | `string` |  |\n| version | `int` |  |\n### Upgrade\n\n| Json | Type | Comment |\n|------|------|---------|\n| port | `uint16` |  |\n| address | `[]Address` |  |\n| device | `string` |  |\n\n"
       }
     },
     {

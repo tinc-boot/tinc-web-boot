@@ -17,7 +17,6 @@ type Config struct {
 	Interface  string   `json:"interface"`
 	AutoStart  bool     `json:"autostart"`
 	Mode       string   `json:"mode"`
-	IP         string   `json:"ip"`
 	Mask       int      `json:"mask"`
 	DeviceType string   `json:"deviceType,omitempty"`
 	Device     string   `json:"device,omitempty"`
@@ -58,6 +57,7 @@ type Node struct {
 	Name      string    `json:"name"`
 	Subnet    string    `json:"subnet"`
 	Port      uint16    `json:"port"`
+	IP        string    `json:"ip"`
 	Address   []Address `json:"address,omitempty"`
 	PublicKey string    `json:"publicKey" tinc:"RSA PUBLIC KEY,blob"`
 	Version   int       `json:"version"`

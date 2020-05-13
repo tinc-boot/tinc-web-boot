@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/alecthomas/kong v0.2.4
+	github.com/alexflint/go-restructure v0.0.0-20160131054339-a509d071de28 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gen2brain/beeep v0.0.0-20200305193625-ff0f4a39397e
 	github.com/gin-gonic/gin v1.6.2

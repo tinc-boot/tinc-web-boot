@@ -222,8 +222,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | online | `bool` |  |
-| status | `*tincd.Peer` |  |
-| config | `*network.Node` |  |
+| config | `network.Node` |  |
 
 ## TincWeb.Peer
 
@@ -255,8 +254,7 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | online | `bool` |  |
-| status | `*tincd.Peer` |  |
-| config | `*network.Node` |  |
+| config | `network.Node` |  |
 
 ## TincWeb.Import
 
@@ -359,6 +357,7 @@ EOF
 | name | `string` |  |
 | subnet | `string` |  |
 | port | `uint16` |  |
+| ip | `string` |  |
 | address | `[]Address` |  |
 | publicKey | `string` |  |
 | version | `int` |  |
@@ -395,6 +394,7 @@ EOF
 | name | `string` |  |
 | subnet | `string` |  |
 | port | `uint16` |  |
+| ip | `string` |  |
 | address | `[]Address` |  |
 | publicKey | `string` |  |
 | version | `int` |  |

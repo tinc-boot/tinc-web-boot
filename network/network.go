@@ -109,6 +109,22 @@ func (network *Network) Nodes() ([]string, error) {
 	return ans, nil
 }
 
+func (network *Network) NodesDefinitions() ([]Node, error) {
+	names, err := network.Nodes()
+	if err != nil {
+		return nil, err
+	}
+	var ans = make([]Node, len(names))
+	for i, name := range names {
+		info, err := network.Node(name)
+		if err != nil {
+			return nil, err
+		}
+		ans[i] = *info
+	}
+	return ans, nil
+}
+
 func (network *Network) Node(name string) (*Node, error) {
 	data, err := ioutil.ReadFile(network.NodeFile(name))
 	if err != nil {
@@ -124,6 +140,15 @@ func (network *Network) Self() (*Node, error) {
 		return nil, err
 	}
 	return network.Node(cfg.Name)
+}
+
+func (network *Network) SelfConfig() (*Node, *Config, error) {
+	cfg, err := network.Read()
+	if err != nil {
+		return nil, nil, err
+	}
+	info, err := network.Node(cfg.Name)
+	return info, cfg, err
 }
 
 func (network *Network) Upgrade(upgrade Upgrade) error {
@@ -221,11 +246,14 @@ func (network *Network) Prepare(ctx context.Context, tincBin string) error {
 	if err != nil {
 		return err
 	}
-
-	if err := network.saveScript("tinc-up", tincUp(config)); err != nil {
+	nodeInfo, err := network.Node(config.Name)
+	if err != nil {
 		return err
 	}
-	if err := network.saveScript("tinc-down", tincDown(config)); err != nil {
+	if err := network.saveScript("tinc-up", tincUp(config, nodeInfo)); err != nil {
+		return err
+	}
+	if err := network.saveScript("tinc-down", tincDown(config, nodeInfo)); err != nil {
 		return err
 	}
 
@@ -239,10 +267,6 @@ func (network *Network) Prepare(ctx context.Context, tincBin string) error {
 		return fmt.Errorf("%s: index public nodes: %w", network.Name(), err)
 	}
 	return network.postConfigure(ctx, config, tincBin)
-}
-
-func (network *Network) Logfile() string {
-	return filepath.Join(network.Root, "log.txt")
 }
 
 func (network *Network) Pidfile() string {
@@ -299,7 +323,6 @@ func (network *Network) defineConfiguration(subnet *net.IPNet) error {
 		Interface: "tinc" + suffix,
 		AutoStart: false,
 		Mode:      "switch",
-		IP:        selfIP.String(),
 		Mask:      mask,
 		Broadcast: "mst",
 	}
@@ -322,6 +345,7 @@ func (network *Network) defineConfiguration(subnet *net.IPNet) error {
 		Subnet:  subnet.String(),
 		Port:    config.Port,
 		Version: version,
+		IP:      selfIP.String(),
 	}
 
 	return network.put(nodeConfig)

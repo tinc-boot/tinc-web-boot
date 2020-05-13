@@ -14,6 +14,7 @@ export interface Node {
     name: string
     subnet: string
     port: number
+    ip: string
     address: Array<Address> | null
     publicKey: string
     version: number

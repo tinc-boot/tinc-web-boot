@@ -10,12 +10,17 @@ var (
 	tincDownTpl = template.Must(template.New("").Parse(tincDownText))
 )
 
-func tincUp(config *Config) string {
-	return mustRender(tincUpTpl, config)
+type params struct {
+	Node   *Node
+	Config *Config
 }
 
-func tincDown(config *Config) string {
-	return mustRender(tincDownTpl, config)
+func tincUp(config *Config, node *Node) string {
+	return mustRender(tincUpTpl, params{node, config})
+}
+
+func tincDown(config *Config, node *Node) string {
+	return mustRender(tincDownTpl, params{node, config})
 }
 
 func mustRender(tpl *template.Template, params interface{}) string {

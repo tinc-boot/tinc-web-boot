@@ -12,12 +12,12 @@ import (
 const scriptSuffix = ""
 
 const tincUpTxt = `#!/bin/sh
-ip addr add {{.IP}}/{{.Mask}} dev $INTERFACE
+ip addr add {{.Node.IP}}/{{.Config.Mask}} dev $INTERFACE
 ip link set dev $INTERFACE up
 `
 
 const tincDownText = `#!/bin/sh
-ip addr del {{.IP}}/{{.Mask}} dev $INTERFACE
+ip addr del {{.Node.IP}}/{{.Config.Mask}} dev $INTERFACE
 ip link set dev $INTERFACE down
 `
 
