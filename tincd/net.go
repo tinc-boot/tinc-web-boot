@@ -197,6 +197,10 @@ func (impl *netImpl) greetEveryone(ctx context.Context, self network.Node, retry
 	}
 
 	for _, node := range nodes {
+		if node.IP == "" {
+			log.Println("will not greet", node.Name, "'cause it is relay node")
+			continue
+		}
 		wg.Add(1)
 		go func(node network.Node) {
 			defer wg.Done()
