@@ -102,3 +102,9 @@ func (impl *TincWebClient) Majordomo(ctx context.Context, network string, lifeti
 	err = client.CallHTTP(ctx, impl.BaseURL, "TincWeb.Majordomo", atomic.AddUint64(&impl.sequence, 1), &reply, network, lifetime)
 	return
 }
+
+// Join by Majordomo Link
+func (impl *TincWebClient) Join(ctx context.Context, url string, start bool) (reply *shared.Network, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "TincWeb.Join", atomic.AddUint64(&impl.sequence, 1), &reply, url, start)
+	return
+}

@@ -179,6 +179,18 @@ In some cases requires restart
         }));
     }
 
+    /**
+    Join by Majordomo Link
+    **/
+    async join(url, start){
+        return (await this.__call('Join', {
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Join",
+            "id" : this.__next_id(),
+            "params" : [url, start]
+        }));
+    }
+
 
 
     __next_id() {

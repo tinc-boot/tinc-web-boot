@@ -9,9 +9,9 @@ from typing import Any, List, Optional
 class Duration(Enum):
     MIN_DURATION = -1 << 63
     MAX_DURATION = 1<<63 - 1
-    NANOSECOND = 1
     MIN_DURATION = -1 << 63
     MAX_DURATION = 1<<63 - 1
+    NANOSECOND = 1
 
     def to_json(self) -> int:
         return self.value
@@ -448,6 +448,22 @@ In some cases requires restart
             raise TincWebError.from_json('majordomo', payload['error'])
         return payload['result']
 
+    async def join(self, url: str, start: bool) -> Network:
+        """
+        Join by Majordomo Link
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "TincWeb.Join",
+            "id": self.__next_id(),
+            "params": [url, start, ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise TincWebError.from_json('join', payload['error'])
+        return Network.from_json(payload['result'])
+
     async def _invoke(self, request):
         return await self.__request('POST', self.__url, json=request)
 
@@ -574,6 +590,14 @@ In some cases requires restart
         params = [network, lifetime.to_json(), ]
         method = "TincWeb.Majordomo"
         self.__add_request(method, params, lambda payload: payload)
+
+    def join(self, url: str, start: bool):
+        """
+        Join by Majordomo Link
+        """
+        params = [url, start, ]
+        method = "TincWeb.Join"
+        self.__add_request(method, params, lambda payload: Network.from_json(payload))
 
     def __add_request(self, method: str, params, factory):
         request_id = self.__next_id()

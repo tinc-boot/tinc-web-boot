@@ -386,6 +386,18 @@ In some cases requires restart
         })) as string;
     }
 
+    /**
+    Join by Majordomo Link
+    **/
+    async join(url: string, start: boolean): Promise<Network> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "TincWeb.Join",
+            "id" : this.__next_id(),
+            "params" : [url, start]
+        })) as Network;
+    }
+
 
     private __next_id() {
         this.__id += 1;

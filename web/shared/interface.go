@@ -54,6 +54,8 @@ type TincWeb interface {
 	Upgrade(network string, update network.Upgrade) (*network.Node, error)
 	// Generate Majordomo request for easy-sharing
 	Majordomo(network string, lifetime time.Duration) (string, error)
+	// Join by Majordomo Link
+	Join(url string, start bool) (*Network, error)
 }
 
 type EndpointKind string

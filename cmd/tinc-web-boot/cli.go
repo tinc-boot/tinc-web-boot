@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
@@ -10,11 +9,9 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 	"tinc-web-boot/network"
 	"tinc-web-boot/support/go/tincweb"
-	"tinc-web-boot/support/go/tincwebmajordomo"
 	"tinc-web-boot/web/shared"
 )
 
@@ -259,52 +256,12 @@ type join struct {
 }
 
 func (m *join) Run(global *globalContext) error {
-	parts := strings.Split(m.URL, "/")
-	token := parts[len(parts)-1]
-	data := strings.Split(token, ".")[1]
-	bindata, err := base64.RawStdEncoding.DecodeString(data)
-	if err != nil {
-		return err
-	}
-
-	var share struct {
-		Network string `json:"network"`
-		Subnet  string `json:"subnet"`
-	}
-
-	err = json.Unmarshal(bindata, &share)
-	if err != nil {
-		return err
-	}
-
-	remote := &tincwebmajordomo.TincWebMajordomoClient{BaseURL: m.URL}
-
-	ntw, err := m.Client().Create(global.ctx, share.Network, share.Subnet)
-	if err != nil {
-		return err
-	}
-
-	self, err := m.Client().Node(global.ctx, ntw.Name)
-	if err != nil {
-		return err
-	}
-
-	sharedNet, err := remote.Join(global.ctx, share.Network, self)
-	if err != nil {
-		return err
-	}
-
-	info, err := m.Client().Import(global.ctx, *sharedNet)
+	info, err := m.Client().Join(global.ctx, m.URL, !m.NoStart)
 	if err != nil {
 		return err
 	}
 	log.Println("SUCCESS!")
 	printNetwork(info)
-	if !m.NoStart {
-		log.Println("Starting...")
-		_, err = m.Client().Start(global.ctx, info.Name)
-		return err
-	}
 	return nil
 }
 

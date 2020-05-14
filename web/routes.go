@@ -1,6 +1,9 @@
 package web
 
 import (
+	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -9,11 +12,17 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 	"tinc-web-boot/network"
+	"tinc-web-boot/support/go/tincwebmajordomo"
 	"tinc-web-boot/tincd"
 	"tinc-web-boot/web/internal"
 	"tinc-web-boot/web/shared"
+)
+
+const (
+	joinTimeout = 15 * time.Second
 )
 
 type Config struct {
@@ -365,4 +374,52 @@ func NewShare(ntw *network.Network) (*shared.Sharing, error) {
 	}
 
 	return &ans, nil
+}
+
+func (srv *api) Join(url string, start bool) (*shared.Network, error) {
+	parts := strings.Split(url, "/")
+	token := parts[len(parts)-1]
+	data := strings.Split(token, ".")[1]
+	bindata, err := base64.RawStdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var share struct {
+		Network string `json:"network"`
+		Subnet  string `json:"subnet"`
+	}
+
+	err = json.Unmarshal(bindata, &share)
+	if err != nil {
+		return nil, err
+	}
+
+	remote := &tincwebmajordomo.TincWebMajordomoClient{BaseURL: url}
+
+	ntw, err := srv.Create(share.Network, share.Subnet)
+	if err != nil {
+		return nil, err
+	}
+
+	self, err := srv.Node(ntw.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), joinTimeout)
+	defer cancel()
+	sharedNet, err := remote.Join(ctx, share.Network, self)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := srv.Import(*sharedNet)
+	if err != nil {
+		return nil, err
+	}
+	if start {
+		return srv.Start(info.Name)
+	}
+	return info, nil
 }

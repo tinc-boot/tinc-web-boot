@@ -512,6 +512,45 @@
         },
         "description": "# TincWeb.Majordomo\n\nGenerate Majordomo request for easy-sharing\n\n* Method: `TincWeb.Majordomo`\n* Returns: `string`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | network | `string` |\n| 1 | lifetime | `Duration` |\n\n### Duration\n\n```go\ntype Duration int64\n```\n\n"
       }
+    },
+    {
+      "name": "Join",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"TincWeb.Join\",\n  \"id\": 1,\n  \"params\": {}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8686/api/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8686",
+          "path": [
+            "",
+            "api",
+            ""
+          ]
+        },
+        "description": "# TincWeb.Join\n\nJoin by Majordomo Link\n\n* Method: `TincWeb.Join`\n* Returns: `*Network`\n\n* Arguments:\n\n| Position | Name | Type |\n|----------|------|------|\n| 0 | url | `string` |\n| 1 | start | `bool` |\n\n### Network\n\n| Json | Type | Comment |\n|------|------|---------|\n| name | `string` |  |\n| running | `bool` |  |\n| config | `*network.Config` |  |\n\n"
+      }
     }
   ]
 }

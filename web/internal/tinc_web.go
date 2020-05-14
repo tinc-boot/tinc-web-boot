@@ -211,5 +211,22 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		return wrap.Majordomo(args.Arg0, args.Arg1)
 	})
 
-	return []string{"TincWeb.Networks", "TincWeb.Network", "TincWeb.Create", "TincWeb.Remove", "TincWeb.Start", "TincWeb.Stop", "TincWeb.Peers", "TincWeb.Peer", "TincWeb.Import", "TincWeb.Share", "TincWeb.Node", "TincWeb.Upgrade", "TincWeb.Majordomo"}
+	router.RegisterFunc("TincWeb.Join", func(params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct {
+			Arg0 string `json:"url"`
+			Arg1 bool   `json:"start"`
+		}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		return wrap.Join(args.Arg0, args.Arg1)
+	})
+
+	return []string{"TincWeb.Networks", "TincWeb.Network", "TincWeb.Create", "TincWeb.Remove", "TincWeb.Start", "TincWeb.Stop", "TincWeb.Peers", "TincWeb.Peer", "TincWeb.Import", "TincWeb.Share", "TincWeb.Node", "TincWeb.Upgrade", "TincWeb.Majordomo", "TincWeb.Join"}
 }

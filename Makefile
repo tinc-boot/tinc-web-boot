@@ -19,8 +19,8 @@ ui:
 regen: bindata ui
 	PATH="$(PATH):$(shell go env GOPATH)/bin" go generate web/routes.go
 
-backend: regen
-	go build -o tinc-web-boot -v ./cmd/tinc-web-boot/
+backend: regen clean
+	go build -o build/tinc-web-boot -v ./cmd/tinc-web-boot/
 
 linux: clean
 	mkdir -p build

@@ -16,6 +16,7 @@ Public Tinc-Web API (json-rpc 2.0)
 * [TincWeb.Node](#tincwebnode) - Node definition in network (aka - self node)
 * [TincWeb.Upgrade](#tincwebupgrade) - Upgrade node parameters.
 * [TincWeb.Majordomo](#tincwebmajordomo) - Generate Majordomo request for easy-sharing
+* [TincWeb.Join](#tincwebjoin) - Join by Majordomo Link
 
 
 
@@ -435,3 +436,35 @@ EOF
 ```go
 type Duration int64
 ```
+
+## TincWeb.Join
+
+Join by Majordomo Link
+
+* Method: `TincWeb.Join`
+* Returns: `*Network`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | url | `string` |
+| 1 | start | `bool` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "http://127.0.0.1:8686/api/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "TincWeb.Join",
+    "params" : []
+}
+EOF
+```
+### Network
+
+| Json | Type | Comment |
+|------|------|---------|
+| name | `string` |  |
+| running | `bool` |  |
+| config | `*network.Config` |  |
