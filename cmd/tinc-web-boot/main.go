@@ -50,7 +50,6 @@ type Main struct {
 
 type Root struct {
 	TincBin         string   `name:"tinc-bin" env:"TINC_BIN" help:"Custom tinc binary location" default:"tincd" json:"tinc_bin"`
-	Host            string   `name:"host" env:"HOST" help:"Binding host" default:"127.0.0.1" json:"host"`
 	Dir             string   `name:"dir" env:"DIR" help:"Directory for config" default:"networks" json:"dir"`
 	Dev             bool     `name:"dev" env:"DEV" help:"Enable DEV mode (CORS + logging)" json:"-"`
 	Headless        bool     `long:"headless" env:"HEADLESS" description:"Disable launch browser" json:"-"`
