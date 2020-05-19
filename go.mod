@@ -17,7 +17,7 @@ require (
 	github.com/reddec/jsonrpc2 v0.1.18-0.20200514125425-e010095d0a08
 	github.com/reddec/struct-view v0.0.0-20200411161836-5041210b61f3
 	github.com/stretchr/testify v1.5.1
-	github.com/tinc-boot/tincd v0.0.0-20200518124055-c1f9617bc3f1
+	github.com/tinc-boot/tincd v0.0.0-20200519054535-e47aa8b1df51
 	github.com/tinylib/msgp v1.1.2
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0
 	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect

@@ -94,12 +94,15 @@ func (pool *Pool) RunNetwork(ntw *network.Network) (tincd.Tincd, error) {
 	if err != nil {
 		return nil, err
 	}
+	instance.Events().SubscribeAll(pool.events.Emitter())
+
 	pool.nets[ntw.Name()] = instance
 	go func() {
 		<-instance.Done()
 		pool.lock.Lock()
 		delete(pool.nets, ntw.Name())
 		pool.lock.Unlock()
+		pool.events.Stopped.Emit(network.NetworkID{Name: ntw.Name()})
 	}()
 	return instance, nil
 }
