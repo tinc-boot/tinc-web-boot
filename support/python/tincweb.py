@@ -49,7 +49,6 @@ class Config:
     name: 'str'
     port: 'int'
     interface: 'str'
-    auto_start: 'bool'
     mode: 'str'
     mask: 'int'
     device_type: 'Optional[str]'
@@ -62,7 +61,6 @@ class Config:
             "name": self.name,
             "port": self.port,
             "interface": self.interface,
-            "autostart": self.auto_start,
             "mode": self.mode,
             "mask": self.mask,
             "deviceType": self.device_type,
@@ -77,7 +75,6 @@ class Config:
                 name=payload['name'],
                 port=payload['port'],
                 interface=payload['interface'],
-                auto_start=payload['autostart'],
                 mode=payload['mode'],
                 mask=payload['mask'],
                 device_type=payload['deviceType'],

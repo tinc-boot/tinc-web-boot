@@ -82,6 +82,8 @@ github.com/reddec/godetector v0.0.0-20200408155538-7d64c6317cb4/go.mod h1:qzWrdJ
 github.com/reddec/godetector v0.0.0-20200420065712-f938e1104afe/go.mod h1:CzQ4Kf0yOsagWbBdC+5pRPJxMnL1uO3/7DimjqEr6Q8=
 github.com/reddec/jsonrpc2 v0.1.13 h1:16Z+pRMWJzCGesvELPI6aWFhyO6LljYueXPd+0sLnI0=
 github.com/reddec/jsonrpc2 v0.1.13/go.mod h1:5TnATr9bGC0gH2TTh3/7qKQiPO+tk3S3qFzOUU+EKo8=
+github.com/reddec/jsonrpc2 v0.1.18-0.20200514125425-e010095d0a08 h1:dLQ+Qk/Ke0b+5UQLM3PnAwSmXMkVgs/YQcDEWUcalMk=
+github.com/reddec/jsonrpc2 v0.1.18-0.20200514125425-e010095d0a08/go.mod h1:heiBKpIJpxXGrQ3W9YKahxgfD6yCsnBsqBedjSOSTQI=
 github.com/reddec/struct-view v0.0.0-20200411161836-5041210b61f3 h1:3GpSIXpbh4Z05ElShpTvpMRGcNrQ0og8I1DGWGnExGU=
 github.com/reddec/struct-view v0.0.0-20200411161836-5041210b61f3/go.mod h1:cot42Ce5c8DVtL6ivRMhlAZkkmKHDxW0f9a67h2va3s=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
@@ -92,6 +94,8 @@ github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af h1:6yITBqGTE2lEeTPG04SN9W+iWHCRyHqlVYILiSXziwk=
 github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af/go.mod h1:4F09kP5F+am0jAwlQLddpoMDM+iewkxxt6nxUQ5nq5o=
+github.com/tinc-boot/tincd v0.0.0-20200518124055-c1f9617bc3f1 h1:Jb+hW16kYrgD1lVq7SMV7Wxa52BT5x8KVmiF8LSr46w=
+github.com/tinc-boot/tincd v0.0.0-20200518124055-c1f9617bc3f1/go.mod h1:u3LBAW9fDGldmIA0YAYYyPxu6WzpVJ0U9HeW97e8f9c=
 github.com/tinylib/msgp v1.1.2 h1:gWmO7n0Ys2RBEb7GPYB9Ujq8Mk5p2U08lRnmMcGy6BQ=
 github.com/tinylib/msgp v1.1.2/go.mod h1:+d+yLhGm8mzTaHzB+wgMYrodPfmZrzkirds8fDWklFE=
 github.com/ugorji/go v1.1.7 h1:/68gy2h+1mWMrwZFeD1kQialdSzAb432dtpeJ42ovdo=

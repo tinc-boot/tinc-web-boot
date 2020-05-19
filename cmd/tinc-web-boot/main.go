@@ -7,6 +7,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/tinc-boot/tincd/network"
 	"io/ioutil"
 	"log"
 	"net"
@@ -16,8 +17,7 @@ import (
 	"strconv"
 	"time"
 	"tinc-web-boot/cmd/tinc-web-boot/internal"
-	"tinc-web-boot/network"
-	"tinc-web-boot/tincd"
+	"tinc-web-boot/pool"
 	"tinc-web-boot/web"
 )
 
@@ -69,14 +69,7 @@ type Root struct {
 
 func main() {
 	var cli Main
-	ctx := kong.Parse(&cli, kong.Vars{"version": version}, kong.Configuration(kong.JSON, configFile))
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		if err := cli.dumpConfig(configFile); err != nil {
-			log.Println("[WARN]", "failed dump config file", configFile, ":", err)
-		} else {
-			_ = network.ApplyOwnerOfSudoUser(configFile)
-		}
-	}
+	ctx := kong.Parse(&cli, kong.Vars{"version": version})
 	gctx, closer := context.WithCancel(context.Background())
 	go func() {
 		c := make(chan os.Signal, 2)
@@ -116,19 +109,13 @@ func (m *Root) Run(global *globalContext) error {
 	}
 	log.Println("preload complete")
 
-	stor := &network.Storage{Root: m.Dir}
-	err = stor.Init()
+	networksPool, err := pool.New(global.ctx, configFile, m.Dir, binary)
 	if err != nil {
 		return err
 	}
+	defer networksPool.Stop()
 
-	pool, err := tincd.New(global.ctx, stor, binary)
-	if err != nil {
-		return err
-	}
-	defer pool.Stop()
-
-	pool.Events().Sink(func(eventName string, payload interface{}) {
+	networksPool.Events().Sink(func(eventName string, payload interface{}) {
 		log.Printf("[TRACE] (%s) %+v", eventName, payload)
 	})
 
@@ -137,7 +124,7 @@ func (m *Root) Run(global *globalContext) error {
 		if err != nil {
 			return err
 		}
-		ntw, err := pool.Create(m.DevNet, subnet)
+		ntw, err := networksPool.Create(m.DevNet, subnet)
 		if err != nil {
 			return err
 		}
@@ -148,7 +135,7 @@ func (m *Root) Run(global *globalContext) error {
 				Port: m.DevPort,
 			})
 		}
-		err = ntw.Definition().Upgrade(network.Upgrade{
+		err = ntw.Upgrade(network.Upgrade{
 			Address: addrs,
 			Port:    m.DevPort,
 		})
@@ -156,12 +143,9 @@ func (m *Root) Run(global *globalContext) error {
 			return err
 		}
 		if m.DevAutoStart {
-			cfg, err := ntw.Definition().Read()
-			if err != nil {
-				return err
-			}
-			cfg.AutoStart = true
-			err = ntw.Definition().Update(cfg)
+			networksPool.Config.AutoStart.Set(ntw.Name())
+
+			err = networksPool.Config.Save()
 			if err != nil {
 				return err
 			}
@@ -169,8 +153,9 @@ func (m *Root) Run(global *globalContext) error {
 		if m.DevGenOnly {
 			return nil
 		}
-		if !ntw.IsRunning() {
-			ntw.Start()
+		_, err = networksPool.RunNetwork(ntw)
+		if err != nil {
+			return err
 		}
 	}
 	if m.AuthKey == "" {
@@ -186,7 +171,7 @@ func (m *Root) Run(global *globalContext) error {
 		PublicAddresses: m.UIPublicAddress,
 		Binding:         m.Bind,
 	}
-	webApi, uiApp := apiCfg.New(pool)
+	webApi, uiApp := apiCfg.New(networksPool)
 	if !m.Headless {
 		go func() {
 
@@ -209,7 +194,7 @@ func (m *Root) Run(global *globalContext) error {
 			}
 		}()
 	} else {
-		token, err := uiApp.IssueAccessToken(3650)
+		token, err := uiApp.IssueAccessToken(global.ctx, 3650)
 		if err != nil {
 			return fmt.Errorf("issue token: %w", err)
 		}

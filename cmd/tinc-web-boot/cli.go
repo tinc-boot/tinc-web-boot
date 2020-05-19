@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"github.com/tinc-boot/tincd/network"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
 	"strconv"
 	"time"
-	"tinc-web-boot/network"
 	"tinc-web-boot/support/go/tincweb"
 	"tinc-web-boot/web/shared"
 )
@@ -266,6 +266,7 @@ func (m *join) Run(global *globalContext) error {
 }
 
 func printNetwork(info *shared.Network) {
+
 	fmt.Println("Name:", info.Name)
 	fmt.Println("Running:", info.Running)
 	if info.Config == nil {
@@ -278,7 +279,6 @@ func printNetwork(info *shared.Network) {
 	fmt.Println("Interface:", info.Config.Interface)
 	fmt.Println("Port:", info.Config.Port)
 	fmt.Println("Mode:", info.Config.Mode)
-	fmt.Println("Autostart:", info.Config.AutoStart)
 	for _, c := range info.Config.ConnectTo {
 		fmt.Println("Connect to:", c)
 	}

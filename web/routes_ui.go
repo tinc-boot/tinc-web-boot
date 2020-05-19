@@ -1,13 +1,14 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gen2brain/beeep"
 	"net"
 	"strconv"
 	"time"
-	"tinc-web-boot/tincd"
+	"tinc-web-boot/pool"
 	shared "tinc-web-boot/web/shared"
 )
 
@@ -16,7 +17,7 @@ type uiRoutes struct {
 	port          uint16
 	publicAddress []string
 	config        shared.Config
-	pool          *tincd.Tincd
+	pool          *pool.Pool
 }
 
 func (srv *uiRoutes) issueToken(duration time.Duration, role string) (string, error) {
@@ -27,16 +28,16 @@ func (srv *uiRoutes) issueToken(duration time.Duration, role string) (string, er
 	return token.SignedString([]byte(srv.key))
 }
 
-func (srv *uiRoutes) IssueAccessToken(validDays uint) (string, error) {
+func (srv *uiRoutes) IssueAccessToken(ctx context.Context, validDays uint) (string, error) {
 	return srv.issueToken(time.Duration(24*validDays)*time.Hour, "admin")
 }
 
-func (srv *uiRoutes) Notify(title, message string) (bool, error) {
+func (srv *uiRoutes) Notify(ctx context.Context, title, message string) (bool, error) {
 	err := beeep.Notify(title, message, "")
 	return err == nil, err
 }
 
-func (srv *uiRoutes) Endpoints() ([]shared.Endpoint, error) {
+func (srv *uiRoutes) Endpoints(ctx context.Context) ([]shared.Endpoint, error) {
 	var ans = make([]shared.Endpoint, 0)
 	list, err := net.Interfaces()
 	if err != nil {
@@ -80,6 +81,6 @@ func (srv *uiRoutes) Endpoints() ([]shared.Endpoint, error) {
 	return ans, nil
 }
 
-func (srv *uiRoutes) Configuration() (*shared.Config, error) {
+func (srv *uiRoutes) Configuration(ctx context.Context) (*shared.Config, error) {
 	return &srv.config, nil
 }

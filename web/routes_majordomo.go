@@ -1,30 +1,32 @@
 package web
 
 import (
+	"context"
 	"fmt"
-	"tinc-web-boot/network"
-	"tinc-web-boot/tincd"
+	"github.com/tinc-boot/tincd/network"
+
+	"tinc-web-boot/pool"
 	"tinc-web-boot/web/shared"
 )
 
-func NewMajordomo(pool *tincd.Tincd) *majordomoImpl {
+func NewMajordomo(pool *pool.Pool) *majordomoImpl {
 	return &majordomoImpl{
 		pool: pool,
 	}
 }
 
 type majordomoImpl struct {
-	pool *tincd.Tincd
+	pool *pool.Pool
 }
 
-func (srv *majordomoImpl) Join(network string, self *network.Node) (*shared.Sharing, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *majordomoImpl) Join(ctx context.Context, network string, self *network.Node) (*shared.Sharing, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
-	err = ntw.Definition().Put(self)
+	err = ntw.Put(self)
 	if err != nil {
 		return nil, fmt.Errorf("import node %s: %w", self.Name, err)
 	}
-	return NewShare(ntw.Definition())
+	return NewShare(ntw)
 }

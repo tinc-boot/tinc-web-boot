@@ -20,7 +20,6 @@ export interface Config {
     name: string
     port: number
     interface: string
-    autostart: boolean
     mode: string
     mask: number
     deviceType: string | null

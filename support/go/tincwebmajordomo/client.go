@@ -3,8 +3,8 @@ package tincwebmajordomo
 import (
 	"context"
 	client "github.com/reddec/jsonrpc2/client"
+	network "github.com/tinc-boot/tincd/network"
 	"sync/atomic"
-	network "tinc-web-boot/network"
 	shared "tinc-web-boot/web/shared"
 )
 

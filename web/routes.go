@@ -9,14 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/reddec/jsonrpc2"
 	"github.com/reddec/struct-view/support/events"
+	"github.com/tinc-boot/tincd/network"
 	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
-	"tinc-web-boot/network"
+	"tinc-web-boot/pool"
 	"tinc-web-boot/support/go/tincwebmajordomo"
-	"tinc-web-boot/tincd"
 	"tinc-web-boot/web/internal"
 	"tinc-web-boot/web/shared"
 )
@@ -35,7 +35,7 @@ type Config struct {
 }
 
 //go:generate go-bindata -pkg web -prefix ui/build/ -fs ui/build/...
-func (cfg Config) New(pool *tincd.Tincd) (*gin.Engine, *uiRoutes) {
+func (cfg Config) New(pool *pool.Pool) (*gin.Engine, *uiRoutes) {
 
 	router := gin.Default()
 
@@ -153,78 +153,85 @@ func (cfg Config) majordomoOnly() gin.HandlerFunc {
 }
 
 type api struct {
-	pool          *tincd.Tincd
+	pool          *pool.Pool
 	key           string
 	publicAddress []string
 }
 
-func (srv *api) Networks() ([]*shared.Network, error) {
+func (srv *api) Networks(ctx context.Context) ([]*shared.Network, error) {
+	list, err := srv.pool.Nets()
+	if err != nil {
+		return nil, err
+	}
 	var ans []*shared.Network
-	for _, ntw := range srv.pool.Nets() {
+	for _, ntw := range list {
 		ans = append(ans, &shared.Network{
-			Name:    ntw.Definition().Name(),
-			Running: ntw.IsRunning(),
+			Name:    ntw.Name(),
+			Running: srv.pool.IsRunning(ntw.Name()),
 		})
 	}
 	return ans, nil
 }
 
-func (srv *api) Network(name string) (*shared.Network, error) {
-	ntw, err := srv.pool.Get(name)
+func (srv *api) Network(ctx context.Context, name string) (*shared.Network, error) {
+	ntw, err := srv.pool.Network(name)
 	if err != nil {
 		return nil, err
 	}
-	config, err := ntw.Definition().Read()
+	config, err := ntw.Read()
 	if err != nil {
 		return nil, err
 	}
 	return &shared.Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
+		Name:    ntw.Name(),
+		Running: srv.pool.IsRunning(ntw.Name()),
 		Config:  config,
 	}, nil
 }
 
-func (srv *api) Peers(network string) ([]*shared.PeerInfo, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *api) Peers(ctx context.Context, network string) ([]*shared.PeerInfo, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
 
-	list, err := ntw.Definition().NodesDefinitions()
+	list, err := ntw.NodesDefinitions()
 	if err != nil {
 		return nil, err
 	}
 
 	var ans []*shared.PeerInfo
 
+	instance := srv.pool.Find(network)
+
 	for _, config := range list {
 		ans = append(ans, &shared.PeerInfo{
 			Name:          config.Name,
-			Online:        ntw.IsActive(config.Name),
+			Online:        instance != nil && instance.IsActive(config.Name),
 			Configuration: config,
 		})
 	}
 	return ans, nil
 }
 
-func (srv *api) Peer(network, name string) (*shared.PeerInfo, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *api) Peer(ctx context.Context, network, name string) (*shared.PeerInfo, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
-	node, err := ntw.Definition().Node(name)
+	node, err := ntw.Node(name)
 	if err != nil {
 		return nil, err
 	}
+	instance := srv.pool.Find(network)
 	return &shared.PeerInfo{
 		Name:          node.Name,
-		Online:        ntw.IsActive(node.Name),
+		Online:        instance != nil && instance.IsActive(node.Name),
 		Configuration: *node,
 	}, nil
 }
 
-func (srv *api) Create(name, subnet string) (*shared.Network, error) {
+func (srv *api) Create(ctx context.Context, name, subnet string) (*shared.Network, error) {
 	_, cidr, err := net.ParseCIDR(subnet)
 	if err != nil {
 		return nil, fmt.Errorf("parse subnet: %w", err)
@@ -234,41 +241,48 @@ func (srv *api) Create(name, subnet string) (*shared.Network, error) {
 		return nil, err
 	}
 	return &shared.Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
+		Name:    ntw.Name(),
+		Running: srv.pool.IsRunning(ntw.Name()),
 	}, nil
 }
 
-func (srv *api) Remove(network string) (bool, error) {
+func (srv *api) Remove(ctx context.Context, network string) (bool, error) {
 	exists, err := srv.pool.Remove(network)
 	return exists, err
 }
 
-func (srv *api) Start(network string) (*shared.Network, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *api) Start(ctx context.Context, network string) (*shared.Network, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
-	ntw.Start()
-	return &shared.Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
-	}, nil
-}
-
-func (srv *api) Stop(network string) (*shared.Network, error) {
-	ntw, err := srv.pool.Get(network)
+	instance, err := srv.pool.RunNetwork(ntw)
 	if err != nil {
 		return nil, err
 	}
-	ntw.Stop()
 	return &shared.Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
+		Name:    ntw.Name(),
+		Running: instance.IsRunning(),
 	}, nil
 }
 
-func (srv *api) Import(sharing shared.Sharing) (*shared.Network, error) {
+func (srv *api) Stop(ctx context.Context, network string) (*shared.Network, error) {
+	ntw, err := srv.pool.Network(network)
+	if err != nil {
+		return nil, err
+	}
+	instance := srv.pool.Find(network)
+	if instance != nil {
+		instance.Stop()
+		<-instance.Done()
+	}
+	return &shared.Network{
+		Name:    ntw.Name(),
+		Running: srv.pool.IsRunning(ntw.Name()),
+	}, nil
+}
+
+func (srv *api) Import(ctx context.Context, sharing shared.Sharing) (*shared.Network, error) {
 	_, cidr, err := net.ParseCIDR(sharing.Subnet)
 	if err != nil {
 		return nil, fmt.Errorf("parse subnet: %w", err)
@@ -278,66 +292,66 @@ func (srv *api) Import(sharing shared.Sharing) (*shared.Network, error) {
 		return nil, err
 	}
 
-	config, err := ntw.Definition().Read()
+	config, err := ntw.Read()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, node := range sharing.Nodes {
-		err := ntw.Definition().Put(node)
+		err := ntw.Put(node)
 		if err != nil {
 			return nil, fmt.Errorf("import node %s: %w", node.Name, err)
 		}
 	}
 
 	return &shared.Network{
-		Name:    ntw.Definition().Name(),
-		Running: ntw.IsRunning(),
+		Name:    ntw.Name(),
+		Running: srv.pool.IsRunning(ntw.Name()),
 		Config:  config,
 	}, nil
 }
 
-func (srv *api) Share(network string) (*shared.Sharing, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *api) Share(ctx context.Context, network string) (*shared.Sharing, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
-	return NewShare(ntw.Definition())
+	return NewShare(ntw)
 }
 
-func (srv *api) Upgrade(network string, update network.Upgrade) (*network.Node, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *api) Upgrade(ctx context.Context, network string, update network.Upgrade) (*network.Node, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
-	err = ntw.Definition().Upgrade(update)
+	err = ntw.Upgrade(update)
 	if err != nil {
 		return nil, err
 	}
-	return srv.Node(network)
+	return srv.Node(ctx, network)
 }
 
-func (srv *api) Node(network string) (*network.Node, error) {
-	ntw, err := srv.pool.Get(network)
+func (srv *api) Node(ctx context.Context, network string) (*network.Node, error) {
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return nil, err
 	}
-	cfg, err := ntw.Definition().Read()
+	cfg, err := ntw.Read()
 	if err != nil {
 		return nil, err
 	}
-	return ntw.Definition().Node(cfg.Name)
+	return ntw.Node(cfg.Name)
 }
 
-func (srv *api) Majordomo(network string, lifetime time.Duration) (string, error) {
+func (srv *api) Majordomo(ctx context.Context, network string, lifetime time.Duration) (string, error) {
 	if len(srv.publicAddress) == 0 {
 		return "", fmt.Errorf("no public addreses defined")
 	}
-	ntw, err := srv.pool.Get(network)
+	ntw, err := srv.pool.Network(network)
 	if err != nil {
 		return "", err
 	}
-	self, err := ntw.Definition().Self()
+	self, err := ntw.Self()
 	if err != nil {
 		return "", err
 	}
@@ -376,7 +390,7 @@ func NewShare(ntw *network.Network) (*shared.Sharing, error) {
 	return &ans, nil
 }
 
-func (srv *api) Join(url string, start bool) (*shared.Network, error) {
+func (srv *api) Join(ctx context.Context, url string, start bool) (*shared.Network, error) {
 	parts := strings.Split(url, "/")
 	token := parts[len(parts)-1]
 	data := strings.Split(token, ".")[1]
@@ -397,12 +411,12 @@ func (srv *api) Join(url string, start bool) (*shared.Network, error) {
 
 	remote := &tincwebmajordomo.TincWebMajordomoClient{BaseURL: url}
 
-	ntw, err := srv.Create(share.Network, share.Subnet)
+	ntw, err := srv.Create(ctx, share.Network, share.Subnet)
 	if err != nil {
 		return nil, err
 	}
 
-	self, err := srv.Node(ntw.Name)
+	self, err := srv.Node(ctx, ntw.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -414,12 +428,12 @@ func (srv *api) Join(url string, start bool) (*shared.Network, error) {
 		return nil, err
 	}
 
-	info, err := srv.Import(*sharedNet)
+	info, err := srv.Import(ctx, *sharedNet)
 	if err != nil {
 		return nil, err
 	}
 	if start {
-		return srv.Start(info.Name)
+		return srv.Start(ctx, info.Name)
 	}
 	return info, nil
 }

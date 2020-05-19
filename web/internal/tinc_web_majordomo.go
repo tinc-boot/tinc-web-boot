@@ -2,14 +2,15 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
 	jsonrpc2 "github.com/reddec/jsonrpc2"
-	network "tinc-web-boot/network"
+	network "github.com/tinc-boot/tincd/network"
 	shared "tinc-web-boot/web/shared"
 )
 
 func RegisterTincWebMajordomo(router *jsonrpc2.Router, wrap shared.TincWebMajordomo) []string {
-	router.RegisterFunc("TincWebMajordomo.Join", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWebMajordomo.Join", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string        `json:"network"`
 			Arg1 *network.Node `json:"self"`
@@ -23,7 +24,7 @@ func RegisterTincWebMajordomo(router *jsonrpc2.Router, wrap shared.TincWebMajord
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Join(args.Arg0, args.Arg1)
+		return wrap.Join(ctx, args.Arg0, args.Arg1)
 	})
 
 	return []string{"TincWebMajordomo.Join"}

@@ -3,19 +3,30 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
 	jsonrpc2 "github.com/reddec/jsonrpc2"
+	network "github.com/tinc-boot/tincd/network"
 	"time"
-	network "tinc-web-boot/network"
 	shared "tinc-web-boot/web/shared"
 )
 
 func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
-	router.RegisterFunc("TincWeb.Networks", func(params json.RawMessage, positional bool) (interface{}, error) {
-		return wrap.Networks()
+	router.RegisterFunc("TincWeb.Networks", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct{}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		return wrap.Networks(ctx)
 	})
 
-	router.RegisterFunc("TincWeb.Network", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Network", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"name"`
 		}
@@ -28,10 +39,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Network(args.Arg0)
+		return wrap.Network(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Create", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Create", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"name"`
 			Arg1 string `json:"subnet"`
@@ -45,10 +56,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Create(args.Arg0, args.Arg1)
+		return wrap.Create(ctx, args.Arg0, args.Arg1)
 	})
 
-	router.RegisterFunc("TincWeb.Remove", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Remove", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 		}
@@ -61,10 +72,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Remove(args.Arg0)
+		return wrap.Remove(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Start", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Start", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 		}
@@ -77,10 +88,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Start(args.Arg0)
+		return wrap.Start(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Stop", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Stop", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 		}
@@ -93,10 +104,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Stop(args.Arg0)
+		return wrap.Stop(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Peers", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Peers", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 		}
@@ -109,10 +120,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Peers(args.Arg0)
+		return wrap.Peers(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Peer", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Peer", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 			Arg1 string `json:"name"`
@@ -126,10 +137,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Peer(args.Arg0, args.Arg1)
+		return wrap.Peer(ctx, args.Arg0, args.Arg1)
 	})
 
-	router.RegisterFunc("TincWeb.Import", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Import", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 shared.Sharing `json:"sharing"`
 		}
@@ -142,10 +153,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Import(args.Arg0)
+		return wrap.Import(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Share", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Share", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 		}
@@ -158,10 +169,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Share(args.Arg0)
+		return wrap.Share(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Node", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Node", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"network"`
 		}
@@ -174,10 +185,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Node(args.Arg0)
+		return wrap.Node(ctx, args.Arg0)
 	})
 
-	router.RegisterFunc("TincWeb.Upgrade", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Upgrade", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string          `json:"network"`
 			Arg1 network.Upgrade `json:"update"`
@@ -191,10 +202,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Upgrade(args.Arg0, args.Arg1)
+		return wrap.Upgrade(ctx, args.Arg0, args.Arg1)
 	})
 
-	router.RegisterFunc("TincWeb.Majordomo", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Majordomo", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string        `json:"network"`
 			Arg1 time.Duration `json:"lifetime"`
@@ -208,10 +219,10 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Majordomo(args.Arg0, args.Arg1)
+		return wrap.Majordomo(ctx, args.Arg0, args.Arg1)
 	})
 
-	router.RegisterFunc("TincWeb.Join", func(params json.RawMessage, positional bool) (interface{}, error) {
+	router.RegisterFunc("TincWeb.Join", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
 			Arg0 string `json:"url"`
 			Arg1 bool   `json:"start"`
@@ -225,7 +236,7 @@ func RegisterTincWeb(router *jsonrpc2.Router, wrap shared.TincWeb) []string {
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Join(args.Arg0, args.Arg1)
+		return wrap.Join(ctx, args.Arg0, args.Arg1)
 	})
 
 	return []string{"TincWeb.Networks", "TincWeb.Network", "TincWeb.Create", "TincWeb.Remove", "TincWeb.Start", "TincWeb.Stop", "TincWeb.Peers", "TincWeb.Peer", "TincWeb.Import", "TincWeb.Share", "TincWeb.Node", "TincWeb.Upgrade", "TincWeb.Majordomo", "TincWeb.Join"}

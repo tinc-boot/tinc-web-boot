@@ -1,8 +1,9 @@
 package shared
 
 import (
+	"context"
+	"github.com/tinc-boot/tincd/network"
 	"time"
-	"tinc-web-boot/network"
 )
 
 type Network struct {
@@ -26,36 +27,36 @@ type Sharing struct {
 // Public Tinc-Web API (json-rpc 2.0)
 type TincWeb interface {
 	// List of available networks (briefly, without config)
-	Networks() ([]*Network, error)
+	Networks(ctx context.Context) ([]*Network, error)
 	// Detailed network info
-	Network(name string) (*Network, error)
+	Network(ctx context.Context, name string) (*Network, error)
 	// Create new network if not exists
-	Create(name, subnet string) (*Network, error)
+	Create(ctx context.Context, name, subnet string) (*Network, error)
 	// Remove network (returns true if network existed)
-	Remove(network string) (bool, error)
+	Remove(ctx context.Context, network string) (bool, error)
 	// Start or re-start network
-	Start(network string) (*Network, error)
+	Start(ctx context.Context, network string) (*Network, error)
 	// Stop network
-	Stop(network string) (*Network, error)
+	Stop(ctx context.Context, network string) (*Network, error)
 	// Peers brief list in network  (briefly, without config)
-	Peers(network string) ([]*PeerInfo, error)
+	Peers(ctx context.Context, network string) ([]*PeerInfo, error)
 	// Peer detailed info by in the network
-	Peer(network, name string) (*PeerInfo, error)
+	Peer(ctx context.Context, network, name string) (*PeerInfo, error)
 	// Import another tinc-web network configuration file.
 	// It means let nodes defined in config join to the network.
 	// Return created (or used) network with full configuration
-	Import(sharing Sharing) (*Network, error)
+	Import(ctx context.Context, sharing Sharing) (*Network, error)
 	// Share network and generate configuration file.
-	Share(network string) (*Sharing, error)
+	Share(ctx context.Context, network string) (*Sharing, error)
 	// Node definition in network (aka - self node)
-	Node(network string) (*network.Node, error)
+	Node(ctx context.Context, network string) (*network.Node, error)
 	// Upgrade node parameters.
 	// In some cases requires restart
-	Upgrade(network string, update network.Upgrade) (*network.Node, error)
+	Upgrade(ctx context.Context, network string, update network.Upgrade) (*network.Node, error)
 	// Generate Majordomo request for easy-sharing
-	Majordomo(network string, lifetime time.Duration) (string, error)
+	Majordomo(ctx context.Context, network string, lifetime time.Duration) (string, error)
 	// Join by Majordomo Link
-	Join(url string, start bool) (*Network, error)
+	Join(ctx context.Context, url string, start bool) (*Network, error)
 }
 
 type EndpointKind string
@@ -78,17 +79,17 @@ type Config struct {
 // Operations with tinc-web-boot related to UI
 type TincWebUI interface {
 	// Issue and sign token
-	IssueAccessToken(validDays uint) (string, error)
+	IssueAccessToken(ctx context.Context, validDays uint) (string, error)
 	// Make desktop notification if system supports it
-	Notify(title, message string) (bool, error)
+	Notify(ctx context.Context, title, message string) (bool, error)
 	// Endpoints list to access web UI
-	Endpoints() ([]Endpoint, error)
+	Endpoints(ctx context.Context) ([]Endpoint, error)
 	// Configuration defined for the instance
-	Configuration() (*Config, error)
+	Configuration(ctx context.Context) (*Config, error)
 }
 
 // Operations for joining public network
 type TincWebMajordomo interface {
 	// Join public network if code matched. Will generate error if node subnet not matched
-	Join(network string, self *network.Node) (*Sharing, error)
+	Join(ctx context.Context, network string, self *network.Node) (*Sharing, error)
 }
