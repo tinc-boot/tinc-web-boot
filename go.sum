@@ -92,6 +92,8 @@ github.com/reddec/struct-view v0.0.0-20200411161836-5041210b61f3 h1:3GpSIXpbh4Z0
 github.com/reddec/struct-view v0.0.0-20200411161836-5041210b61f3/go.mod h1:cot42Ce5c8DVtL6ivRMhlAZkkmKHDxW0f9a67h2va3s=
 github.com/reddec/struct-view v0.0.0-20200507072606-0a025cbeb88c h1:tiVFiNtMqsUl8fyQ3oZvOQZq2Z9tmjucJ7fQXEQRau4=
 github.com/reddec/struct-view v0.0.0-20200507072606-0a025cbeb88c/go.mod h1:cot42Ce5c8DVtL6ivRMhlAZkkmKHDxW0f9a67h2va3s=
+github.com/reddec/struct-view v0.0.0-20200519061408-4ab6bee5f51d h1:LEsz7NYx8/t20/HwonybHubiYZIC3ol1MZM7tfwffI0=
+github.com/reddec/struct-view v0.0.0-20200519061408-4ab6bee5f51d/go.mod h1:cot42Ce5c8DVtL6ivRMhlAZkkmKHDxW0f9a67h2va3s=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
