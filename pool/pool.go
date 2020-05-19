@@ -6,6 +6,7 @@ import (
 	"github.com/tinc-boot/tincd"
 	"github.com/tinc-boot/tincd/network"
 	"net"
+	"os"
 	"path/filepath"
 	"sync"
 )
@@ -19,9 +20,10 @@ func New(ctx context.Context, configFile, rootDir, tincBin string) (*Pool, error
 	}
 
 	err := pool.Config.LoadFrom(configFile)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
+	pool.Config._filename = configFile
 
 	list, err := network.List(rootDir)
 	if err != nil {
